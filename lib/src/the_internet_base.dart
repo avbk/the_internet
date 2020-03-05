@@ -44,11 +44,8 @@ class MockedServer {
       _baseUrl,
       pathRegex,
       (request, args) => json == null
-          ? InternetResponse(code: code)
-          : InternetResponse(
-              code: code,
-              body: jsonEncode(json),
-              headers: {"Content-Type": "application/json"}),
+          ? InternetResponse(code)
+          : InternetResponse.fromJson(json, code: code),
     );
   }
 
@@ -67,7 +64,7 @@ class MockedServer {
 typedef _ResponseBuilder = InternetResponse Function(
     InternetRequest request,
     List<String> args,
-);
+    );
 
 class _CallHandler {
   final String method;
@@ -102,11 +99,17 @@ class InternetResponse {
   final String body;
   final Map<String, String> headers;
 
-  InternetResponse({
-    this.code = _kDefaultCode,
+  InternetResponse(this.code, {
     this.body = _kDefaultBody,
     this.headers = _kDefaultHeaders,
   });
+
+  InternetResponse.fromJson(dynamic json, {int code: _kDefaultCode})
+      : this(
+    code,
+    body: jsonEncode(json),
+    headers: {"Content-Type": "application/json"},
+  );
 
   Response toHttp() => Response(body, code, headers: headers);
 }
