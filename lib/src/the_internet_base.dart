@@ -32,21 +32,63 @@ class TheInternet {
   }
 }
 
+typedef ResponseBuilder = InternetResponse Function(
+  InternetRequest request,
+  List<String> args,
+);
+typedef SimpleJsonResponseBuilder = dynamic Function(List<String> args);
+typedef ComplexJsonResponseBuilder = dynamic Function(
+  InternetRequest request,
+  List<String> args,
+);
+
 class MockedServer {
   final String _baseUrl;
   final Map<String, _CallHandler> _handlers;
 
   MockedServer._(this._baseUrl) : _handlers = {};
 
-  void get(String pathRegex, {int code: _kDefaultCode, dynamic json}) {
-    _handlers[pathRegex] = _CallHandler(
-      "GET",
-      _baseUrl,
-      pathRegex,
-      (request, args) => json == null
-          ? InternetResponse(code)
-          : InternetResponse.fromJson(json, code: code),
-    );
+  void get(
+    String pathRegex, {
+    int code: _kDefaultCode,
+    Map<String, String> headers: _kDefaultHeaders,
+    dynamic body,
+    ResponseBuilder response,
+  }) {
+    ResponseBuilder builder;
+    if (response != null) {
+      builder = response;
+    } else {
+      if (body is String) {
+        builder = (request, args) => InternetResponse(
+              code,
+              body: body,
+              headers: headers,
+            );
+      } else if (body is SimpleJsonResponseBuilder) {
+        builder = (request, args) => InternetResponse.fromJson(
+              body(args),
+              code: code,
+              headers: headers,
+            );
+      } else if (body is ComplexJsonResponseBuilder) {
+        builder = (request, args) => InternetResponse.fromJson(
+              body(request, args),
+              code: code,
+              headers: headers,
+            );
+      } else if (body != null) {
+        builder = (request, args) => InternetResponse.fromJson(
+              body,
+              code: code,
+              headers: headers,
+            );
+      } else {
+        builder = (request, args) => InternetResponse(code);
+      }
+    }
+
+    _handlers[pathRegex] = _CallHandler("GET", _baseUrl, pathRegex, builder);
   }
 
   InternetResponse _tryHandle(InternetRequest request) {
@@ -61,36 +103,41 @@ class MockedServer {
   }
 }
 
-typedef _ResponseBuilder = InternetResponse Function(
-    InternetRequest request,
-    List<String> args,
-    );
-
 class _CallHandler {
   final String method;
   final RegExp _regex;
-  final _ResponseBuilder _handler;
+  final ResponseBuilder _buildResponse;
 
-  _CallHandler(this.method, String baseUrl, String pathRegex, this._handler)
-      : this._regex = RegExp("$baseUrl$pathRegex");
+  _CallHandler(this.method,
+      String baseUrl,
+      String pathRegex,
+      this._buildResponse,) : this._regex = RegExp("$baseUrl$pathRegex");
 
   InternetResponse _tryHandle(InternetRequest request) {
-    final isSameMethod = request.method.toUpperCase() == method.toUpperCase();
-
-    if (isSameMethod && _regex.hasMatch(request.url)) {
-      return _handler(request, []);
-    } else {
-      return null;
+    if (request.method.toUpperCase() == method.toUpperCase()) {
+      final match = _regex.firstMatch(request.url);
+      if (match != null) {
+        final args = List.generate(
+          match.groupCount,
+          // +1, because 0 is the complete pattern
+              (index) => match.group(index + 1),
+        );
+        return _buildResponse(request, args);
+      }
     }
+
+    return null;
   }
 }
 
 class InternetRequest {
+  final Map<String, String> headers;
   final String method;
   final String url;
 
   InternetRequest.fromHttp(Request request)
-      : this.method = request.method,
+      : this.headers = request.headers,
+        this.method = request.method,
         this.url = request.url.toString();
 }
 
@@ -104,11 +151,14 @@ class InternetResponse {
     this.headers = _kDefaultHeaders,
   });
 
-  InternetResponse.fromJson(dynamic json, {int code: _kDefaultCode})
-      : this(
+  InternetResponse.fromJson(dynamic json, {
+    int code: _kDefaultCode,
+    Map<String, String> headers: _kDefaultHeaders,
+  }) : this(
     code,
     body: jsonEncode(json),
-    headers: {"Content-Type": "application/json"},
+    headers: Map.of(headers)
+      ..addAll({"Content-Type": "application/json"}),
   );
 
   Response toHttp() => Response(body, code, headers: headers);
