@@ -1,8 +1,11 @@
+import 'dart:convert';
+
 import 'package:http/http.dart';
 import 'package:http/testing.dart';
 
 const _kDefaultCode = 200;
 const _kDefaultBody = "";
+const _kDefaultHeaders = <String, String>{};
 
 class TheInternet {
   final Map<String, MockedServer> _servers;
@@ -35,12 +38,17 @@ class MockedServer {
 
   MockedServer._(this._baseUrl) : _handlers = {};
 
-  void get(String pathRegex, {int code: _kDefaultCode}) {
+  void get(String pathRegex, {int code: _kDefaultCode, dynamic json}) {
     _handlers[pathRegex] = _CallHandler(
       "GET",
       _baseUrl,
       pathRegex,
-      (request, args) => InternetResponse(code: code),
+      (request, args) => json == null
+          ? InternetResponse(code: code)
+          : InternetResponse(
+              code: code,
+              body: jsonEncode(json),
+              headers: {"Content-Type": "application/json"}),
     );
   }
 
@@ -57,8 +65,8 @@ class MockedServer {
 }
 
 typedef _ResponseBuilder = InternetResponse Function(
-  InternetRequest request,
-  List<String> args,
+    InternetRequest request,
+    List<String> args,
 );
 
 class _CallHandler {
@@ -92,11 +100,13 @@ class InternetRequest {
 class InternetResponse {
   final int code;
   final String body;
+  final Map<String, String> headers;
 
   InternetResponse({
     this.code = _kDefaultCode,
     this.body = _kDefaultBody,
+    this.headers = _kDefaultHeaders,
   });
 
-  Response toHttp() => Response(body, code);
+  Response toHttp() => Response(body, code, headers: headers);
 }

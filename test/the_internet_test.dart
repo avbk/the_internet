@@ -38,5 +38,18 @@ void main() {
       expect(response.body, isEmpty);
       expect(response.headers, isEmpty);
     });
+
+    test('allows to respond with json', () async {
+      server.get("/messages", json: {
+        "page": 1,
+        "messages": ["Hello", "World"],
+      });
+
+      final response = await client.get("https://example.com/messages");
+
+      expect(response.statusCode, 200);
+      expect(response.body, '{"page":1,"messages":["Hello","World"]}');
+      expect(response.headers["Content-Type"], "application/json");
+    });
   });
 }
