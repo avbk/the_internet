@@ -20,9 +20,9 @@ class TheInternet {
   }
 
   Future<Response> _handleRequest(Request request) async {
-    final InternetRequest req = InternetRequest.fromHttp(request);
+    final CapturedRequest req = CapturedRequest.fromHttp(request);
     for (var server in _servers.values) {
-      final InternetResponse response = server._tryHandle(req);
+      final MockedResponse response = server._tryHandle(req);
       if (response != null) {
         return response.toHttp();
       }
@@ -32,74 +32,104 @@ class TheInternet {
   }
 }
 
-typedef ResponseBuilder = InternetResponse Function(
-  InternetRequest request,
+typedef ResponseBuilder = MockedResponse Function(
+  CapturedRequest request,
   List<String> args,
 );
 typedef SimpleJsonResponseBuilder = dynamic Function(List<String> args);
 typedef ComplexJsonResponseBuilder = dynamic Function(
-  InternetRequest request,
-  List<String> args,
-);
+    CapturedRequest request,
+    List<String> args,
+    );
 
 class MockedServer {
   final String _baseUrl;
   final Map<String, _CallHandler> _handlers;
+  final List<CapturedCall> _callQueue;
 
-  MockedServer._(this._baseUrl) : _handlers = {};
+  MockedServer._(this._baseUrl)
+      : _handlers = {},
+        _callQueue = [];
 
-  void get(
-    String pathRegex, {
+  void post(String pathRegex, {
     int code: _kDefaultCode,
     Map<String, String> headers: _kDefaultHeaders,
     dynamic body,
     ResponseBuilder response,
   }) {
+    ResponseBuilder builder = _chooseBuilder(response, body, code, headers);
+
+    _handlers["POST $pathRegex"] =
+        _CallHandler("POST", _baseUrl, pathRegex, builder);
+  }
+
+  void get(String pathRegex, {
+    int code: _kDefaultCode,
+    Map<String, String> headers: _kDefaultHeaders,
+    dynamic body,
+    ResponseBuilder response,
+  }) {
+    ResponseBuilder builder = _chooseBuilder(response, body, code, headers);
+
+    _handlers["GET $pathRegex"] =
+        _CallHandler("GET", _baseUrl, pathRegex, builder);
+  }
+
+  ResponseBuilder _chooseBuilder(ResponseBuilder response, body, int code,
+      Map<String, String> headers) {
     ResponseBuilder builder;
     if (response != null) {
       builder = response;
     } else {
       if (body is String) {
-        builder = (request, args) => InternetResponse(
+        builder = (request, args) =>
+            MockedResponse(
               code,
               body: body,
               headers: headers,
             );
       } else if (body is SimpleJsonResponseBuilder) {
-        builder = (request, args) => InternetResponse.fromJson(
+        builder = (request, args) =>
+            MockedResponse.fromJson(
               body(args),
               code: code,
               headers: headers,
             );
       } else if (body is ComplexJsonResponseBuilder) {
-        builder = (request, args) => InternetResponse.fromJson(
+        builder = (request, args) =>
+            MockedResponse.fromJson(
               body(request, args),
               code: code,
               headers: headers,
             );
       } else if (body != null) {
-        builder = (request, args) => InternetResponse.fromJson(
+        builder = (request, args) =>
+            MockedResponse.fromJson(
               body,
               code: code,
               headers: headers,
             );
       } else {
-        builder = (request, args) => InternetResponse(code);
+        builder = (request, args) => MockedResponse(code);
       }
     }
-
-    _handlers[pathRegex] = _CallHandler("GET", _baseUrl, pathRegex, builder);
+    return builder;
   }
 
-  InternetResponse _tryHandle(InternetRequest request) {
+  MockedResponse _tryHandle(CapturedRequest request) {
     for (var handler in _handlers.values) {
-      final InternetResponse response = handler._tryHandle(request);
+      final MockedResponse response = handler._tryHandle(request);
       if (response != null) {
+        _callQueue.add(CapturedCall(request, response));
         return response;
       }
     }
 
     return null;
+  }
+
+  CapturedCall nextCapturedCall() {
+    return _callQueue.removeLast();
   }
 }
 
@@ -113,7 +143,7 @@ class _CallHandler {
       String pathRegex,
       this._buildResponse,) : this._regex = RegExp("$baseUrl$pathRegex");
 
-  InternetResponse _tryHandle(InternetRequest request) {
+  MockedResponse _tryHandle(CapturedRequest request) {
     if (request.method.toUpperCase() == method.toUpperCase()) {
       final match = _regex.firstMatch(request.url);
       if (match != null) {
@@ -130,28 +160,68 @@ class _CallHandler {
   }
 }
 
-class InternetRequest {
+class CapturedCall {
+  final CapturedRequest request;
+  final MockedResponse response;
+
+  CapturedCall(this.request, this.response);
+}
+
+class CapturedRequest {
   final Map<String, String> headers;
+  final CapturedBody body;
   final String method;
   final String url;
 
-  InternetRequest.fromHttp(Request request)
+  CapturedRequest.fromHttp(Request request)
       : this.headers = request.headers,
         this.method = request.method,
-        this.url = request.url.toString();
+        this.url = request.url.toString(),
+        this.body = CapturedBody.fromHttp(request)
+  ;
 }
 
-class InternetResponse {
+class CapturedBody {
+  final dynamic asString;
+  final Map<String, String> asFormData;
+  final dynamic asJson;
+
+  CapturedBody._(this.asString, this.asFormData, this.asJson);
+
+  factory CapturedBody.fromHttp(Request request) {
+    if (request.contentLength == 0) {
+      return null;
+    }
+    else {
+      String body = request.body;
+
+      Map<String, String> formData;
+      try {
+        formData = request.bodyFields;
+      } catch (ignored) {}
+
+      dynamic json;
+      try {
+        json = jsonDecode(body);
+      } catch (ignored) {}
+
+      return CapturedBody._(body, formData, json);
+    }
+  }
+
+}
+
+class MockedResponse {
   final int code;
   final String body;
   final Map<String, String> headers;
 
-  InternetResponse(this.code, {
+  MockedResponse(this.code, {
     this.body = _kDefaultBody,
     this.headers = _kDefaultHeaders,
   });
 
-  InternetResponse.fromJson(dynamic json, {
+  MockedResponse.fromJson(dynamic json, {
     int code: _kDefaultCode,
     Map<String, String> headers: _kDefaultHeaders,
   }) : this(

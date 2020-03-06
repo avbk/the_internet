@@ -20,7 +20,7 @@ void main() {
       expect(response.headers, isEmpty);
     });
 
-    test("allows to create a very simple get mock", (server, client) async {
+    test("allows to create a very simple GET mock", (server, client) async {
       server.get("/messages/17", code: 404);
 
       final response = await client.get("https://example.com/messages/17");
@@ -97,7 +97,7 @@ void main() {
         (server, client) async {
       server.get(
         "/messages/(.*)",
-        body: (InternetRequest request, List<String> args) =>
+        body: (CapturedRequest request, List<String> args) =>
             {"message": "${request.headers["greeting"]} ${args[0]}"},
       );
 
@@ -115,8 +115,9 @@ void main() {
         (server, client) async {
       server.get(
         "/messages/(.*)",
-        response: (request, args) => InternetResponse(200,
-            body: "${request.headers["greeting"]} ${args[0]}"),
+        response: (request, args) =>
+            MockedResponse(200,
+                body: "${request.headers["greeting"]} ${args[0]}"),
       );
 
       final response = await client.get(
