@@ -1,25 +1,16 @@
-import 'package:http/http.dart';
 import 'package:http/testing.dart';
 import 'package:test/test.dart';
 import 'package:the_internet/the_internet.dart';
 
+import '../test_utils.dart';
+
 void main() {
-  group('The internet ', () {
-    TheInternet internet;
-    MockedServer server;
-    BaseClient client;
-
-    setUp(() {
-      internet = TheInternet();
-      server = internet.mockServer("https://example.com");
-      client = internet.createHttpClient();
-    });
-
-    test('allows to obtain a httpclient', () {
+  httpClientTestGroup("GET", (test) {
+    test("allows to obtain a mocked BaseClient", (server, client) {
       expect(client, isA<MockClient>());
     });
 
-    test('uses 200 <EMPTY> as default', () async {
+    test("uses 200 <EMPTY> as default", (server, client) async {
       server.get("/nothing");
 
       final response = await client.get("https://example.com/nothing");
@@ -29,7 +20,7 @@ void main() {
       expect(response.headers, isEmpty);
     });
 
-    test('allows to create a very simple get mock', () async {
+    test("allows to create a very simple GET mock", (server, client) async {
       server.get("/messages/17", code: 404);
 
       final response = await client.get("https://example.com/messages/17");
@@ -38,7 +29,8 @@ void main() {
       expect(response.body, isEmpty);
       expect(response.headers, isEmpty);
     });
-    test('allows to respond with string', () async {
+
+    test("allows to respond with string", (server, client) async {
       server.get("/messages", body: "Hello World!");
 
       final response = await client.get("https://example.com/messages");
@@ -47,7 +39,9 @@ void main() {
       expect(response.body, "Hello World!");
       expect(response.headers, isEmpty);
     });
-    test('allows to respond with string and custom code and headers', () async {
+
+    test("allows to respond with string and custom code and headers",
+        (server, client) async {
       server.get("/messages",
           code: 417, body: "Hello World!", headers: {"X-Server-Type": "Mock"});
 
@@ -57,7 +51,8 @@ void main() {
       expect(response.body, "Hello World!");
       expect(response.headers["X-Server-Type"], "Mock");
     });
-    test('allows to respond with json', () async {
+
+    test("allows to respond with json", (server, client) async {
       server.get("/messages", body: {
         "page": 1,
         "messages": ["Hello", "World"],
@@ -69,7 +64,9 @@ void main() {
       expect(response.body, '{"page":1,"messages":["Hello","World"]}');
       expect(response.headers["Content-Type"], "application/json");
     });
-    test('allows to respond with json and custom code and headers', () async {
+
+    test("allows to respond with json and custom code and headers",
+        (server, client) async {
       server.get("/messages", code: 417, headers: {
         "X-Server-Type": "Mock"
       }, body: {
@@ -84,7 +81,8 @@ void main() {
       expect(response.headers["Content-Type"], "application/json");
       expect(response.headers["X-Server-Type"], "Mock");
     });
-    test('allows to respond with json based on regex', () async {
+
+    test("allows to respond with json based on regex", (server, client) async {
       server.get("/messages/(.*)",
           body: (args) => {"message": "Hello ${args[0]}"});
 
@@ -95,10 +93,11 @@ void main() {
       expect(response.headers["Content-Type"], "application/json");
     });
 
-    test('allows to respond with json based on regex and headers', () async {
+    test("allows to respond with json based on regex and headers",
+        (server, client) async {
       server.get(
         "/messages/(.*)",
-        body: (InternetRequest request, List<String> args) =>
+        body: (CapturedRequest request, List<String> args) =>
             {"message": "${request.headers["greeting"]} ${args[0]}"},
       );
 
@@ -112,12 +111,13 @@ void main() {
       expect(response.headers["Content-Type"], "application/json");
     });
 
-    test('allows to respond with anything based on regex and request',
-        () async {
+    test("allows to respond with anything based on regex and request",
+        (server, client) async {
       server.get(
         "/messages/(.*)",
-        response: (request, args) => InternetResponse(200,
-            body: "${request.headers["greeting"]} ${args[0]}"),
+        response: (request, args) =>
+            MockedResponse(200,
+                body: "${request.headers["greeting"]} ${args[0]}"),
       );
 
       final response = await client.get(
