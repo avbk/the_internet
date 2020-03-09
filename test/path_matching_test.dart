@@ -1,4 +1,5 @@
 import 'package:test/test.dart';
+import 'package:the_internet/the_internet.dart';
 
 import 'test_utils.dart';
 
@@ -21,6 +22,15 @@ void main() {
       expect(postResponse.statusCode, 204);
       expect(postResponse.body, isEmpty);
       expect(postResponse.headers, isEmpty);
+    });
+
+    test("GET something unknown throws error", (server, client) async {
+      server.get("/messages", body: ["Hello"]);
+
+      expect(
+        () async => await client.get("https://example.com/unknown"),
+        throwsA(isA<EndOfTheInternetError>()),
+      );
     });
   });
 }

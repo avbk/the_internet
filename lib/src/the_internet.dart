@@ -38,7 +38,37 @@ class TheInternet {
       }
     }
 
-    return null;
+    throw EndOfTheInternetError(this, request);
+  }
+
+  String get humanReadableMatchers {
+    String message = "";
+    for (var server in _servers.values) {
+      message += "${server._baseUrl}\n";
+      for (var methodAndPath in server._handlers.keys) {
+        message += "\t${methodAndPath}\n";
+      }
+    }
+    return message;
+  }
+}
+
+class EndOfTheInternetError implements Exception {
+  final TheInternet internet;
+  final CapturedRequest request;
+
+  EndOfTheInternetError(this.internet, this.request);
+
+  String get message => """
+Could not find a handler for: ${request.method} ${request.url}
+
+Installed handlers:
+${internet.humanReadableMatchers}
+""";
+
+  @override
+  String toString() {
+    return "EndOfTheInternetError: $message";
   }
 }
 
