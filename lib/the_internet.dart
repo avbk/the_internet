@@ -3,4 +3,16 @@
 /// Use [TheInternet] to create and configure a MockHttpClient.
 library the_internet;
 
-export 'src/the_internet_base.dart';
+import "dart:convert";
+
+import "package:dio/dio.dart" as dio;
+import "package:http/http.dart" as http;
+import "package:http/testing.dart";
+
+part "src/call_handler.dart";
+
+part "src/captured_call.dart";
+
+part "src/mocked_server.dart";
+
+part "src/the_internet.dart";

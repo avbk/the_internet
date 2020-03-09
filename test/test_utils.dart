@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:dio/dio.dart' as dio;
 import 'package:http/http.dart' as http;
 import 'package:test/test.dart';
-import 'package:the_internet/src/the_internet_base.dart';
+import 'package:the_internet/the_internet.dart';
 
 typedef HttpClientTestCallback = Function(
     MockedServer server, http.BaseClient client);
