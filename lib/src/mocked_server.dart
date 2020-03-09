@@ -9,6 +9,19 @@ class MockedServer {
       : _handlers = {},
         _callQueue = [];
 
+  void get(
+    String pathRegex, {
+    int code: _kDefaultCode,
+    Map<String, String> headers: _kDefaultHeaders,
+    dynamic body,
+    ResponseBuilder response,
+  }) {
+    ResponseBuilder builder = _chooseBuilder(response, body, code, headers);
+
+    _handlers["GET $pathRegex"] =
+        _CallHandler("GET", _baseUrl, pathRegex, builder);
+  }
+
   void post(
     String pathRegex, {
     int code: _kDefaultCode,
@@ -22,8 +35,7 @@ class MockedServer {
         _CallHandler("POST", _baseUrl, pathRegex, builder);
   }
 
-  void get(
-    String pathRegex, {
+  void put(String pathRegex, {
     int code: _kDefaultCode,
     Map<String, String> headers: _kDefaultHeaders,
     dynamic body,
@@ -31,8 +43,8 @@ class MockedServer {
   }) {
     ResponseBuilder builder = _chooseBuilder(response, body, code, headers);
 
-    _handlers["GET $pathRegex"] =
-        _CallHandler("GET", _baseUrl, pathRegex, builder);
+    _handlers["PUT $pathRegex"] =
+        _CallHandler("PUT", _baseUrl, pathRegex, builder);
   }
 
   ResponseBuilder _chooseBuilder(
