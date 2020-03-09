@@ -80,7 +80,8 @@ class MockedServer {
       : _handlers = {},
         _callQueue = [];
 
-  void post(String pathRegex, {
+  void post(
+    String pathRegex, {
     int code: _kDefaultCode,
     Map<String, String> headers: _kDefaultHeaders,
     dynamic body,
@@ -92,7 +93,8 @@ class MockedServer {
         _CallHandler("POST", _baseUrl, pathRegex, builder);
   }
 
-  void get(String pathRegex, {
+  void get(
+    String pathRegex, {
     int code: _kDefaultCode,
     Map<String, String> headers: _kDefaultHeaders,
     dynamic body,
@@ -104,15 +106,14 @@ class MockedServer {
         _CallHandler("GET", _baseUrl, pathRegex, builder);
   }
 
-  ResponseBuilder _chooseBuilder(ResponseBuilder response, body, int code,
-      Map<String, String> headers) {
+  ResponseBuilder _chooseBuilder(
+      ResponseBuilder response, body, int code, Map<String, String> headers) {
     ResponseBuilder builder;
     if (response != null) {
       builder = response;
     } else {
       if (body is String) {
-        builder = (request, args) =>
-            MockedResponse(
+        builder = (request, args) => MockedResponse(
               code,
               body: body,
               headers: headers,
@@ -214,19 +215,16 @@ class CapturedRequest {
         this.url = request.uri.toString(),
         this.body = null;
 
-  static Map<String, String> _convertHeaders(Map<String, dynamic> headers) {
-    if (headers == null) {
-      return {};
-    } else {
-      return Map.fromEntries(
+  static Map<String, String> _convertHeaders(Map<String, dynamic> headers) =>
+      headers == null
+          ? {}
+          : Map.fromEntries(
         headers.entries.map((entry) =>
             MapEntry<String, String>(
               entry.key,
               entry.value.toString(),
             )),
       );
-    }
-  }
 }
 
 class CapturedBody {
@@ -280,8 +278,12 @@ class MockedResponse {
   http.Response toHttp() => http.Response(body, code, headers: headers);
 
   dio.ResponseBody toDio() =>
-      dio.ResponseBody.fromString(
-        body,
-        code,
-      );
+      dio.ResponseBody.fromString(body, code, headers: _toDio(headers));
+
+  Map<String, List<String>> _toDio(Map<String, String> headers) =>
+      headers ==
+          null
+          ? null
+          : Map.fromEntries(
+          headers.entries.map((e) => MapEntry(e.key.toLowerCase(), [e.value])));
 }
