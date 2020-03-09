@@ -24,7 +24,8 @@ class MockedServer {
         _chooseBuilder(response, body, code, headers),
       );
 
-  void post(String pathRegex, {
+  void post(
+    String pathRegex, {
     int code: _kDefaultCode,
     Map<String, String> headers: _kDefaultHeaders,
     dynamic body,
@@ -38,7 +39,8 @@ class MockedServer {
         _chooseBuilder(response, body, code, headers),
       );
 
-  void put(String pathRegex, {
+  void put(
+    String pathRegex, {
     int code: _kDefaultCode,
     Map<String, String> headers: _kDefaultHeaders,
     dynamic body,
@@ -52,7 +54,8 @@ class MockedServer {
         _chooseBuilder(response, body, code, headers),
       );
 
-  void patch(String pathRegex, {
+  void patch(
+    String pathRegex, {
     int code: _kDefaultCode,
     Map<String, String> headers: _kDefaultHeaders,
     dynamic body,
@@ -66,7 +69,8 @@ class MockedServer {
         _chooseBuilder(response, body, code, headers),
       );
 
-  void delete(String pathRegex, {
+  void delete(
+    String pathRegex, {
     int code: _kDefaultCode,
     Map<String, String> headers: _kDefaultHeaders,
     dynamic body,
@@ -80,7 +84,8 @@ class MockedServer {
         _chooseBuilder(response, body, code, headers),
       );
 
-  void head(String pathRegex, {
+  void head(
+    String pathRegex, {
     int code: _kDefaultCode,
     Map<String, String> headers: _kDefaultHeaders,
     dynamic body,
@@ -94,11 +99,17 @@ class MockedServer {
         _chooseBuilder(response, body, code, headers),
       );
 
-  void _addHandler(String method, String pathRegex, int times,
-      ResponseBuilder builder) {
+  void _addHandler(
+      String method, String pathRegex, int times, ResponseBuilder builder) {
     var key = "$method $pathRegex";
     if (!_handlers.containsKey(key)) {
       _handlers[key] = [];
+    } else {
+      for (var handler in _handlers[key]) {
+        if (handler.times == null)
+          throw StateError(
+              "There can only be one infinite handler. Did you forget to specify the times before argument?");
+      }
     }
 
     _handlers[key].add(
@@ -106,15 +117,14 @@ class MockedServer {
     );
   }
 
-  ResponseBuilder _chooseBuilder(ResponseBuilder response, body, int code,
-      Map<String, String> headers) {
+  ResponseBuilder _chooseBuilder(
+      ResponseBuilder response, body, int code, Map<String, String> headers) {
     ResponseBuilder builder;
     if (response != null) {
       builder = response;
     } else {
       if (body is String) {
-        builder = (request, args) =>
-            MockedResponse(
+        builder = (request, args) => MockedResponse(
               code,
               body: body,
               headers: headers,
@@ -159,6 +169,13 @@ class MockedServer {
   }
 
   CapturedCall nextCapturedCall() {
+    if (_callQueue.isEmpty)
+      throw StateError("Ther are no captured calls");
     return _callQueue.removeLast();
+  }
+
+  void reset() {
+    _handlers.clear();
+    _callQueue.clear();
   }
 }

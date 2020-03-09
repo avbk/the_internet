@@ -51,6 +51,13 @@ class TheInternet {
     }
     return message;
   }
+
+  void reset() {
+    for (var server in _servers.values) {
+      server.reset();
+    }
+    _servers.clear();
+  }
 }
 
 class EndOfTheInternetError implements Exception {
