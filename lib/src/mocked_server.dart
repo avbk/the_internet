@@ -2,7 +2,7 @@ part of "../the_internet.dart";
 
 class MockedServer {
   final String _baseUrl;
-  final Map<String, _CallHandler> _handlers;
+  final Map<String, List<_CallHandler>> _handlers;
   final List<CapturedCall> _callQueue;
 
   MockedServer._(this._baseUrl)
@@ -15,85 +15,106 @@ class MockedServer {
     Map<String, String> headers: _kDefaultHeaders,
     dynamic body,
     ResponseBuilder response,
-  }) {
-    ResponseBuilder builder = _chooseBuilder(response, body, code, headers);
+    int times,
+  }) =>
+      _addHandler(
+        "GET",
+        pathRegex,
+        times,
+        _chooseBuilder(response, body, code, headers),
+      );
 
-    _handlers["GET $pathRegex"] =
-        _CallHandler("GET", _baseUrl, pathRegex, builder);
-  }
-
-  void post(
-    String pathRegex, {
+  void post(String pathRegex, {
     int code: _kDefaultCode,
     Map<String, String> headers: _kDefaultHeaders,
     dynamic body,
     ResponseBuilder response,
-  }) {
-    ResponseBuilder builder = _chooseBuilder(response, body, code, headers);
-
-    _handlers["POST $pathRegex"] =
-        _CallHandler("POST", _baseUrl, pathRegex, builder);
-  }
+    int times,
+  }) =>
+      _addHandler(
+        "POST",
+        pathRegex,
+        times,
+        _chooseBuilder(response, body, code, headers),
+      );
 
   void put(String pathRegex, {
     int code: _kDefaultCode,
     Map<String, String> headers: _kDefaultHeaders,
     dynamic body,
     ResponseBuilder response,
-  }) {
-    ResponseBuilder builder = _chooseBuilder(response, body, code, headers);
+    int times,
+  }) =>
+      _addHandler(
+        "PUT",
+        pathRegex,
+        times,
+        _chooseBuilder(response, body, code, headers),
+      );
 
-    _handlers["PUT $pathRegex"] =
-        _CallHandler("PUT", _baseUrl, pathRegex, builder);
-  }
-
-  void patch(
-    String pathRegex, {
+  void patch(String pathRegex, {
     int code: _kDefaultCode,
     Map<String, String> headers: _kDefaultHeaders,
     dynamic body,
     ResponseBuilder response,
-  }) {
-    ResponseBuilder builder = _chooseBuilder(response, body, code, headers);
+    int times,
+  }) =>
+      _addHandler(
+        "PATCH",
+        pathRegex,
+        times,
+        _chooseBuilder(response, body, code, headers),
+      );
 
-    _handlers["PATCH $pathRegex"] =
-        _CallHandler("PATCH", _baseUrl, pathRegex, builder);
-  }
-
-  void delete(
-    String pathRegex, {
+  void delete(String pathRegex, {
     int code: _kDefaultCode,
     Map<String, String> headers: _kDefaultHeaders,
     dynamic body,
     ResponseBuilder response,
-  }) {
-    ResponseBuilder builder = _chooseBuilder(response, body, code, headers);
+    int times,
+  }) =>
+      _addHandler(
+        "DELETE",
+        pathRegex,
+        times,
+        _chooseBuilder(response, body, code, headers),
+      );
 
-    _handlers["DELETE $pathRegex"] =
-        _CallHandler("DELETE", _baseUrl, pathRegex, builder);
-  }
-
-  void head(
-    String pathRegex, {
+  void head(String pathRegex, {
     int code: _kDefaultCode,
     Map<String, String> headers: _kDefaultHeaders,
     dynamic body,
     ResponseBuilder response,
-  }) {
-    ResponseBuilder builder = _chooseBuilder(response, body, code, headers);
+    int times,
+  }) =>
+      _addHandler(
+        "HEAD",
+        pathRegex,
+        times,
+        _chooseBuilder(response, body, code, headers),
+      );
 
-    _handlers["HEAD $pathRegex"] =
-        _CallHandler("HEAD", _baseUrl, pathRegex, builder);
+  void _addHandler(String method, String pathRegex, int times,
+      ResponseBuilder builder) {
+    var key = "$method $pathRegex";
+    if (!_handlers.containsKey(key)) {
+      _handlers[key] = [];
+    }
+
+    _handlers[key].add(
+      _CallHandler(method, _baseUrl, pathRegex, builder, times),
+    );
   }
 
-  ResponseBuilder _chooseBuilder(
-      ResponseBuilder response, body, int code, Map<String, String> headers) {
+  ResponseBuilder _chooseBuilder(ResponseBuilder response, body, int code,
+      Map<String, String> headers) {
     ResponseBuilder builder;
     if (response != null) {
       builder = response;
     } else {
       if (body is String) {
-        builder = (request, args) => MockedResponse(
+        builder = (request, args) =>
+            MockedResponse(
               code,
               body: body,
               headers: headers,
@@ -124,11 +145,13 @@ class MockedServer {
   }
 
   MockedResponse _tryHandle(CapturedRequest request) {
-    for (var handler in _handlers.values) {
-      final MockedResponse response = handler._tryHandle(request);
-      if (response != null) {
-        _callQueue.add(CapturedCall(request, response));
-        return response;
+    for (var handlers in _handlers.values) {
+      for (var handler in handlers) {
+        final MockedResponse response = handler._tryHandle(request);
+        if (response != null) {
+          _callQueue.add(CapturedCall(request, response));
+          return response;
+        }
       }
     }
 

@@ -32,5 +32,30 @@ void main() {
         throwsA(isA<EndOfTheInternetError>()),
       );
     });
+
+    test("handlers can be limited", (server, client) async {
+      server.get("/messages", times: 1);
+
+      final response = await client.get("https://example.com/messages");
+      expect(response.statusCode, 200);
+      expect(
+        () async => await client.get("https://example.com/messages"),
+        throwsA(isA<EndOfTheInternetError>()),
+      );
+    });
+
+    test("handlers can be queued", (server, client) async {
+      server.get("/messages", times: 1);
+      server.get("/messages", code: 404, times: 1);
+
+      final response1 = await client.get("https://example.com/messages");
+      expect(response1.statusCode, 200);
+      final response2 = await client.get("https://example.com/messages");
+      expect(response2.statusCode, 404);
+      expect(
+        () async => await client.get("https://example.com/messages"),
+        throwsA(isA<EndOfTheInternetError>()),
+      );
+    });
   });
 }
