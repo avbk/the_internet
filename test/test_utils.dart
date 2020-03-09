@@ -85,6 +85,14 @@ typedef _simpleDioRequest = Future<dio.Response> Function(
   dio.CancelToken cancelToken,
   dio.ProgressCallback onReceiveProgress,
 });
+typedef _simpleBodyDioRequest = Future<dio.Response> Function(
+  String path, {
+  dynamic data,
+  Map<String, dynamic> queryParameters,
+  dio.Options options,
+  dio.CancelToken cancelToken,
+});
+
 typedef _bodyDioRequest = Future<dio.Response> Function(
   String path, {
   dynamic data,
@@ -147,7 +155,8 @@ void multiClientTestGroup(String method, MultiClientTestGroup innerGroup) {
         return call(url, options: dioOptions);
       }
 
-      Future<dio.Response> executeBodyDioCall(_bodyDioRequest call) {
+      Future<dio.Response> executeSimpleBodyDioCall(
+          _simpleBodyDioRequest call) {
         if (request["formData"] != null) {
           return call(url,
               data: dio.FormData.fromMap(
@@ -168,6 +177,11 @@ void multiClientTestGroup(String method, MultiClientTestGroup innerGroup) {
           );
         }
       }
+
+      Future<dio.Response> executeBodyDioCall(_bodyDioRequest call) =>
+          executeSimpleBodyDioCall((path,
+              {cancelToken, data, options, queryParameters}) =>
+              call(path, data: data, options: options));
 
       void verifyRecordedCall() {
         if (recorded != null) {
@@ -213,6 +227,8 @@ void multiClientTestGroup(String method, MultiClientTestGroup innerGroup) {
         http.Response resp;
         if (method == "GET")
           resp = await executeSimpleHttpCall(httpClient.get);
+        else if (method == "DELETE")
+          resp = await executeSimpleHttpCall(httpClient.delete);
         else if (method == "POST")
           resp = await executeBodyHttpCall(httpClient.post);
         else if (method == "PUT")
@@ -231,6 +247,8 @@ void multiClientTestGroup(String method, MultiClientTestGroup innerGroup) {
         try {
           if (method == "GET")
             resp = await executeSimpleDioCall(dioClient.get);
+          else if (method == "DELETE")
+            resp = await executeSimpleBodyDioCall(dioClient.delete);
           else if (method == "POST")
             resp = await executeBodyDioCall(dioClient.post);
           else if (method == "PUT")
