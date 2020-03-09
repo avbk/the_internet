@@ -85,7 +85,7 @@ typedef _simpleDioRequest = Future<dio.Response> Function(
   dio.CancelToken cancelToken,
   dio.ProgressCallback onReceiveProgress,
 });
-typedef _bodyDIoRequest = Future<dio.Response> Function(
+typedef _bodyDioRequest = Future<dio.Response> Function(
   String path, {
   dynamic data,
   Map<String, dynamic> queryParameters,
@@ -111,10 +111,7 @@ void multiClientTestGroup(String method, MultiClientTestGroup innerGroup) {
       String url;
 
       Future<http.Response> executeSimpleHttpCall(_simpleHttpRequest call) =>
-          call(
-            url,
-            headers: request["headers"],
-          );
+          call(url, headers: request["headers"]);
 
       Future<http.Response> executeBodyHttpCall(_bodyHttpRequest call) {
         if (request["formData"] != null)
@@ -150,7 +147,7 @@ void multiClientTestGroup(String method, MultiClientTestGroup innerGroup) {
         return call(url, options: dioOptions);
       }
 
-      Future<dio.Response> executeBodyDioCall(_bodyDIoRequest call) {
+      Future<dio.Response> executeBodyDioCall(_bodyDioRequest call) {
         if (request["formData"] != null) {
           return call(url,
               data: dio.FormData.fromMap(
