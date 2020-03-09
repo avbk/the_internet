@@ -67,8 +67,45 @@ typedef MultiClientTest = Function(
 });
 typedef MultiClientTestGroup = Function(MultiClientTest test);
 
+typedef _simpleHttpRequest = Future<http.Response> Function(
+  String url, {
+  Map<String, String> headers,
+});
+typedef _bodyHttpRequest = Future<http.Response> Function(
+  String url, {
+  Map<String, String> headers,
+  dynamic body,
+  Encoding encoding,
+});
+
+typedef _simpleDioRequest = Future<dio.Response> Function(
+  String path, {
+  Map<String, dynamic> queryParameters,
+  dio.Options options,
+  dio.CancelToken cancelToken,
+  dio.ProgressCallback onReceiveProgress,
+});
+typedef _simpleBodyDioRequest = Future<dio.Response> Function(
+  String path, {
+  dynamic data,
+  Map<String, dynamic> queryParameters,
+  dio.Options options,
+  dio.CancelToken cancelToken,
+});
+
+typedef _bodyDioRequest = Future<dio.Response> Function(
+  String path, {
+  dynamic data,
+  Map<String, dynamic> queryParameters,
+  dio.Options options,
+  dio.CancelToken cancelToken,
+  dio.ProgressCallback onSendProgress,
+  dio.ProgressCallback onReceiveProgress,
+});
+
 void multiClientTestGroup(String method, MultiClientTestGroup innerGroup) {
-  innerGroup((String description, {
+  innerGroup((
+    String description, {
     MultiClientConfigCallback configure,
     Map<String, dynamic> request,
     Map<String, dynamic> response,
@@ -81,54 +118,72 @@ void multiClientTestGroup(String method, MultiClientTestGroup innerGroup) {
       dio.Dio dioClient;
       String url;
 
-      setUp(() {
-        internet = TheInternet();
-        server = internet.mockServer("https://example.com");
+      Future<http.Response> executeSimpleHttpCall(_simpleHttpRequest call) =>
+          call(url, headers: request["headers"]);
 
-        httpClient = internet.createHttpClient();
-        dioClient = dio.Dio();
-        dioClient.httpClientAdapter = internet.createDioAdapter();
-
-        configure(server);
-        url = request["url"] ?? "https://example.com${request["path"]}";
-      });
-
-      test("with http", () async {
-        http.Response resp;
-        if (method == "GET")
-          resp = await httpClient.get(
+      Future<http.Response> executeBodyHttpCall(_bodyHttpRequest call) {
+        if (request["formData"] != null)
+          return call(
             url,
             headers: request["headers"],
+            body: request["formData"],
           );
-        else if (method == "POST") {
-          if (request["formData"] != null)
-            resp = await httpClient.post(
-              url,
-              headers: request["headers"],
-              body: request["formData"],
-            );
-          else if (request["json"] != null) {
-            final headers = request["headers"];
-            if (headers != null) headers["Content-Type"] = "application/json";
+        else if (request["json"] != null) {
+          final headers = request["headers"];
+          if (headers != null) headers["Content-Type"] = "application/json";
 
-            resp = await httpClient.post(
-              url,
-              headers: headers,
-              body: jsonEncode(request["json"]),
-            );
-          } else {
-            resp = await httpClient.post(
-              url,
-              headers: request["headers"],
-              body: request["body"],
-            );
-          }
+          return call(
+            url,
+            headers: headers,
+            body: jsonEncode(request["json"]),
+          );
+        } else {
+          return call(
+            url,
+            headers: request["headers"],
+            body: request["body"],
+          );
         }
+      }
 
-        expect(resp.statusCode, response["code"]);
-        expect(resp.body, response["body"]);
-        expect(resp.headers, response["headers"]);
+      final dio.Options dioOptions = dio.Options(
+        headers: request["headers"],
+        responseType: dio.ResponseType.plain,
+      );
 
+      Future<dio.Response> executeSimpleDioCall(_simpleDioRequest call) {
+        return call(url, options: dioOptions);
+      }
+
+      Future<dio.Response> executeSimpleBodyDioCall(
+          _simpleBodyDioRequest call) {
+        if (request["formData"] != null) {
+          return call(url,
+              data: dio.FormData.fromMap(
+                request["formData"],
+              ),
+              options: dioOptions);
+        } else if (request["json"] != null) {
+          return call(
+            url,
+            data: request["json"],
+            options: dioOptions,
+          );
+        } else {
+          return call(
+            url,
+            data: request["body"],
+            options: dioOptions,
+          );
+        }
+      }
+
+      Future<dio.Response> executeBodyDioCall(_bodyDioRequest call) =>
+          executeSimpleBodyDioCall((path,
+              {cancelToken, data, options, queryParameters}) =>
+              call(path, data: data, options: options));
+
+      void verifyRecordedCall() {
         if (recorded != null) {
           final recordedCall = server.nextCapturedCall();
 
@@ -154,37 +209,56 @@ void multiClientTestGroup(String method, MultiClientTestGroup innerGroup) {
                   containsAll(recorded["request"]["headers"].entries));
           }
         }
+      }
+
+      setUp(() {
+        internet = TheInternet();
+        server = internet.mockServer("https://example.com");
+
+        httpClient = internet.createHttpClient();
+        dioClient = dio.Dio();
+        dioClient.httpClientAdapter = internet.createDioAdapter();
+
+        configure(server);
+        url = request["url"] ?? "https://example.com${request["path"]}";
+      });
+
+      test("with http", () async {
+        http.Response resp;
+        if (method == "GET")
+          resp = await executeSimpleHttpCall(httpClient.get);
+        else if (method == "DELETE")
+          resp = await executeSimpleHttpCall(httpClient.delete);
+        else if (method == "HEAD")
+          resp = await executeSimpleHttpCall(httpClient.head);
+        else if (method == "POST")
+          resp = await executeBodyHttpCall(httpClient.post);
+        else if (method == "PUT")
+          resp = await executeBodyHttpCall(httpClient.put);
+        else if (method == "PATCH")
+          resp = await executeBodyHttpCall(httpClient.patch);
+
+        expect(resp.statusCode, response["code"]);
+        expect(resp.body, response["body"]);
+        expect(resp.headers, response["headers"]);
+
+        verifyRecordedCall();
       });
       test("with dio", () async {
         dio.Response resp;
-        final dio.Options options = dio.Options(
-          headers: request["headers"],
-          responseType: dio.ResponseType.plain,
-        );
         try {
           if (method == "GET")
-            resp = await dioClient.get(url, options: options);
-          else if (method == "POST") {
-            if (request["formData"] != null) {
-              resp = await dioClient.post(url,
-                  data: dio.FormData.fromMap(
-                    request["formData"],
-                  ),
-                  options: options);
-            } else if (request["json"] != null) {
-              resp = await dioClient.post(
-                url,
-                data: request["json"],
-                options: options,
-              );
-            } else {
-              resp = await dioClient.post(
-                url,
-                data: request["body"],
-                options: options,
-              );
-            }
-          }
+            resp = await executeSimpleDioCall(dioClient.get);
+          else if (method == "DELETE")
+            resp = await executeSimpleBodyDioCall(dioClient.delete);
+          else if (method == "HEAD")
+            resp = await executeSimpleBodyDioCall(dioClient.head);
+          else if (method == "POST")
+            resp = await executeBodyDioCall(dioClient.post);
+          else if (method == "PUT")
+            resp = await executeBodyDioCall(dioClient.put);
+          else if (method == "PATCH")
+            resp = await executeBodyDioCall(dioClient.patch);
         } catch (e) {
           expect(e, isA<dio.DioError>());
           dio.DioError error = e as dio.DioError;
@@ -201,37 +275,7 @@ void multiClientTestGroup(String method, MultiClientTestGroup innerGroup) {
         expect(resp.data, response["body"]);
         expect(resp.headers.map, response["headers"]);
 
-        if (recorded != null) {
-          final recordedCall = server.nextCapturedCall();
-
-          if (recorded["response"] != null) {
-            expect(recordedCall.response.code, recorded["response"]["code"]);
-            expect(recordedCall.response.body, recorded["response"]["body"]);
-            expect(
-                recordedCall.response.headers, recorded["response"]["headers"]);
-          }
-
-          if (recorded["request"] != null) {
-            String url = recordedCall.request.url;
-            if (method == "POST" && url.contains("?"))
-              url = url
-                  .split("?")
-                  .first;
-
-            expect(url, recorded["request"]["url"]);
-            expect(recordedCall.request.body?.asString,
-                recorded["request"]["bodyAsString"]);
-            expect(recordedCall.request.body?.asFormData,
-                recorded["request"]["bodyAsFormData"]);
-            expect(recordedCall.request.body?.asJson,
-                recorded["request"]["bodyAsJson"]);
-
-            // only check extra headers (not content type or alike)
-            if (recorded["request"]["headers"] != null)
-              expect(recordedCall.request.headers.entries,
-                  containsAll(recorded["request"]["headers"].entries));
-          }
-        }
+        verifyRecordedCall();
       });
     });
   });
