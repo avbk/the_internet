@@ -217,6 +217,8 @@ void multiClientTestGroup(String method, MultiClientTestGroup innerGroup) {
           resp = await executeBodyHttpCall(httpClient.post);
         else if (method == "PUT")
           resp = await executeBodyHttpCall(httpClient.put);
+        else if (method == "PATCH")
+          resp = await executeBodyHttpCall(httpClient.patch);
 
         expect(resp.statusCode, response["code"]);
         expect(resp.body, response["body"]);
@@ -229,11 +231,12 @@ void multiClientTestGroup(String method, MultiClientTestGroup innerGroup) {
         try {
           if (method == "GET")
             resp = await executeSimpleDioCall(dioClient.get);
-          else if (method == "POST") {
+          else if (method == "POST")
             resp = await executeBodyDioCall(dioClient.post);
-          } else if (method == "PUT") {
+          else if (method == "PUT")
             resp = await executeBodyDioCall(dioClient.put);
-          }
+          else if (method == "PATCH")
+            resp = await executeBodyDioCall(dioClient.patch);
         } catch (e) {
           expect(e, isA<dio.DioError>());
           dio.DioError error = e as dio.DioError;

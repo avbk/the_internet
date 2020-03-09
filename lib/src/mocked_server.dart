@@ -47,6 +47,19 @@ class MockedServer {
         _CallHandler("PUT", _baseUrl, pathRegex, builder);
   }
 
+  void patch(
+    String pathRegex, {
+    int code: _kDefaultCode,
+    Map<String, String> headers: _kDefaultHeaders,
+    dynamic body,
+    ResponseBuilder response,
+  }) {
+    ResponseBuilder builder = _chooseBuilder(response, body, code, headers);
+
+    _handlers["PATCH $pathRegex"] =
+        _CallHandler("PATCH", _baseUrl, pathRegex, builder);
+  }
+
   ResponseBuilder _chooseBuilder(
       ResponseBuilder response, body, int code, Map<String, String> headers) {
     ResponseBuilder builder;
