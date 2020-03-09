@@ -213,7 +213,7 @@ class CapturedRequest {
       : this.headers = _convertHeaders(request.headers),
         this.method = request.method,
         this.url = request.uri.toString(),
-        this.body = null;
+        this.body = CapturedBody.fromDio(request);
 
   static Map<String, String> _convertHeaders(Map<String, dynamic> headers) =>
       headers == null
@@ -252,6 +252,22 @@ class CapturedBody {
 
       return CapturedBody._(body, formData, json);
     }
+  }
+
+  factory CapturedBody.fromDio(dio.RequestOptions request) {
+    if (request.data is String) {
+      return CapturedBody._(request.data, null, null);
+    } else if (request.data is dio.FormData) {
+      final formData = request.data as dio.FormData;
+
+      return CapturedBody._(
+          formData.fields.map((e) => "${e.key}=${e.value}").join("&"),
+          Map.fromEntries(formData.fields),
+          null);
+    } else if (request.data != null) {
+      return CapturedBody._(jsonEncode(request.data), null, request.data);
+    } else
+      return null;
   }
 }
 
