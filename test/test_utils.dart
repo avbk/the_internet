@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:http/http.dart';
 import 'package:test/test.dart';
 import 'package:the_internet/src/the_internet_base.dart';
@@ -23,6 +24,32 @@ void httpClientTestGroup(String method, HttpClientTestGroup innerGroup) {
     innerGroup((String description, HttpClientTestCallback callback) {
       test(description, () async {
         await callback(server, client);
+      });
+    });
+  });
+}
+
+typedef DioClientTestCallback = Function(MockedServer server, Dio dio);
+typedef DioClientTest = Function(
+    String description, DioClientTestCallback test);
+typedef DioClientTestGroup = Function(DioClientTest test);
+
+void dioClientTestGroup(String method, DioClientTestGroup innerGroup) {
+  group("[Dio $method]", () {
+    TheInternet internet;
+    MockedServer server;
+    Dio dio;
+
+    setUp(() {
+      internet = TheInternet();
+      server = internet.mockServer("https://example.com");
+      dio = Dio();
+      dio.httpClientAdapter = internet.createDioAdapter();
+    });
+
+    innerGroup((String description, DioClientTestCallback callback) {
+      test(description, () async {
+        await callback(server, dio);
       });
     });
   });

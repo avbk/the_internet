@@ -1,6 +1,7 @@
 import 'dart:convert';
 
-import 'package:http/http.dart';
+import 'package:dio/dio.dart' as dio;
+import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 
 const _kDefaultCode = 200;
@@ -12,24 +13,52 @@ class TheInternet {
 
   TheInternet() : _servers = {};
 
-  BaseClient createHttpClient() => MockClient(_handleRequest);
+  http.BaseClient createHttpClient() => MockClient(_handleHttpRequest);
+
+  dio.HttpClientAdapter createDioAdapter() => _MockDioAdapter(this);
 
   MockedServer mockServer(String baseUrl) {
     _servers[baseUrl] = MockedServer._(baseUrl);
     return _servers[baseUrl];
   }
 
-  Future<Response> _handleRequest(Request request) async {
+  Future<http.Response> _handleHttpRequest(http.Request request) async {
     final CapturedRequest req = CapturedRequest.fromHttp(request);
+    final MockedResponse response = await _handleCapturedRequest(req);
+    return response?.toHttp();
+  }
+
+  Future<dio.ResponseBody> _handleDioRequest(dio.RequestOptions request) async {
+    final CapturedRequest req = CapturedRequest.fromDio(request);
+    final MockedResponse response = await _handleCapturedRequest(req);
+    return response?.toDio();
+  }
+
+  Future<MockedResponse> _handleCapturedRequest(CapturedRequest request) async {
     for (var server in _servers.values) {
-      final MockedResponse response = server._tryHandle(req);
+      final MockedResponse response = server._tryHandle(request);
       if (response != null) {
-        return response.toHttp();
+        return response;
       }
     }
 
     return null;
   }
+}
+
+class _MockDioAdapter extends dio.HttpClientAdapter {
+  final TheInternet _internet;
+
+  _MockDioAdapter(this._internet);
+
+  @override
+  Future<dio.ResponseBody> fetch(dio.RequestOptions options,
+      Stream<List<int>> requestStream, Future cancelFuture) {
+    return _internet._handleDioRequest(options);
+  }
+
+  @override
+  void close({bool force = false}) {}
 }
 
 typedef ResponseBuilder = MockedResponse Function(
@@ -38,9 +67,9 @@ typedef ResponseBuilder = MockedResponse Function(
 );
 typedef SimpleJsonResponseBuilder = dynamic Function(List<String> args);
 typedef ComplexJsonResponseBuilder = dynamic Function(
-    CapturedRequest request,
-    List<String> args,
-    );
+  CapturedRequest request,
+  List<String> args,
+);
 
 class MockedServer {
   final String _baseUrl;
@@ -173,12 +202,31 @@ class CapturedRequest {
   final String method;
   final String url;
 
-  CapturedRequest.fromHttp(Request request)
+  CapturedRequest.fromHttp(http.Request request)
       : this.headers = request.headers,
         this.method = request.method,
         this.url = request.url.toString(),
-        this.body = CapturedBody.fromHttp(request)
-  ;
+        this.body = CapturedBody.fromHttp(request);
+
+  CapturedRequest.fromDio(dio.RequestOptions request)
+      : this.headers = _convertHeaders(request.headers),
+        this.method = request.method,
+        this.url = request.uri.toString(),
+        this.body = null;
+
+  static Map<String, String> _convertHeaders(Map<String, dynamic> headers) {
+    if (headers == null) {
+      return {};
+    } else {
+      return Map.fromEntries(
+        headers.entries.map((entry) =>
+            MapEntry<String, String>(
+              entry.key,
+              entry.value.toString(),
+            )),
+      );
+    }
+  }
 }
 
 class CapturedBody {
@@ -188,11 +236,10 @@ class CapturedBody {
 
   CapturedBody._(this.asString, this.asFormData, this.asJson);
 
-  factory CapturedBody.fromHttp(Request request) {
+  factory CapturedBody.fromHttp(http.Request request) {
     if (request.contentLength == 0) {
       return null;
-    }
-    else {
+    } else {
       String body = request.body;
 
       Map<String, String> formData;
@@ -208,7 +255,6 @@ class CapturedBody {
       return CapturedBody._(body, formData, json);
     }
   }
-
 }
 
 class MockedResponse {
@@ -231,5 +277,11 @@ class MockedResponse {
       ..addAll({"Content-Type": "application/json"}),
   );
 
-  Response toHttp() => Response(body, code, headers: headers);
+  http.Response toHttp() => http.Response(body, code, headers: headers);
+
+  dio.ResponseBody toDio() =>
+      dio.ResponseBody.fromString(
+        body,
+        code,
+      );
 }
