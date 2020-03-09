@@ -229,6 +229,8 @@ void multiClientTestGroup(String method, MultiClientTestGroup innerGroup) {
           resp = await executeSimpleHttpCall(httpClient.get);
         else if (method == "DELETE")
           resp = await executeSimpleHttpCall(httpClient.delete);
+        else if (method == "HEAD")
+          resp = await executeSimpleHttpCall(httpClient.head);
         else if (method == "POST")
           resp = await executeBodyHttpCall(httpClient.post);
         else if (method == "PUT")
@@ -249,6 +251,8 @@ void multiClientTestGroup(String method, MultiClientTestGroup innerGroup) {
             resp = await executeSimpleDioCall(dioClient.get);
           else if (method == "DELETE")
             resp = await executeSimpleBodyDioCall(dioClient.delete);
+          else if (method == "HEAD")
+            resp = await executeSimpleBodyDioCall(dioClient.head);
           else if (method == "POST")
             resp = await executeBodyDioCall(dioClient.post);
           else if (method == "PUT")

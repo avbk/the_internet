@@ -73,6 +73,19 @@ class MockedServer {
         _CallHandler("DELETE", _baseUrl, pathRegex, builder);
   }
 
+  void head(
+    String pathRegex, {
+    int code: _kDefaultCode,
+    Map<String, String> headers: _kDefaultHeaders,
+    dynamic body,
+    ResponseBuilder response,
+  }) {
+    ResponseBuilder builder = _chooseBuilder(response, body, code, headers);
+
+    _handlers["HEAD $pathRegex"] =
+        _CallHandler("HEAD", _baseUrl, pathRegex, builder);
+  }
+
   ResponseBuilder _chooseBuilder(
       ResponseBuilder response, body, int code, Map<String, String> headers) {
     ResponseBuilder builder;
@@ -104,7 +117,7 @@ class MockedServer {
               headers: headers,
             );
       } else {
-        builder = (request, args) => MockedResponse(code);
+        builder = (request, args) => MockedResponse(code, headers: headers);
       }
     }
     return builder;
