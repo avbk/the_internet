@@ -2,7 +2,7 @@ part of "../the_internet.dart";
 
 /// A call captured by [TheInternet].
 ///
-/// Every request is logged with it's corresponding mocked response for later
+/// Every request is logged with its corresponding mocked response for later
 /// verification.
 class CapturedCall {
   /// The request, which has been received by [TheInternet] and was handled by
@@ -21,8 +21,8 @@ class CapturedCall {
 class CapturedRequest {
   /// The headers are never null, but may be empty.
   ///
-  /// _Note: currently we do not care about Dio supporting
-  /// multiple values per header, they are most probably merged..._
+  /// _Note: the fact that Dio supports  multiple values per header
+  /// has not been targeted._
   final Map<String, String> headers;
 
   /// The captured body or null if no body was provided (e.g. a GET request)
@@ -70,8 +70,6 @@ class CapturedRequest {
 /// The body, which has been captured by [TheInternet].
 class CapturedBody {
   /// The raw body as [String], never null
-  ///
-  /// _Note: binary bodies might break this_
   final String asString;
 
   /// The data in FormData format, if the client sent form-data, otherwise null
@@ -124,13 +122,13 @@ class CapturedBody {
 /// The request, which has been captured by [TheInternet].
 class MockedResponse {
 
-  /// The status code to be delivered to the client, never null, defaults to 200
+  /// The status code to be delivered to the client, never null, defaults to `200`
   final int code;
 
-  /// The body to be delivered to the client, never null, defaults to ""
+  /// The body to be delivered to the client, never null, defaults to `""`
   final String body;
 
-  /// The headers to be delivered to the client, never null, defaults to {}
+  /// The headers to be delivered to the client, never null, defaults to `{}`
   final Map<String, String> headers;
 
   /// Constructs an arbitrary mocked response.
