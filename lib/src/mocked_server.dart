@@ -171,7 +171,7 @@ class MockedServer {
         for (var handler in handlers) {
           final MockedResponse response = handler._tryHandle(request);
           if (response != null) {
-            _callQueue.add(CapturedCall(request, response));
+            _callQueue.add(CapturedCall._(request, response));
             return response;
           }
         }

@@ -21,15 +21,15 @@ class TheInternet {
   }
 
   Future<http.Response> _handleHttpRequest(http.Request request) async {
-    final CapturedRequest req = CapturedRequest.fromHttp(request);
+    final CapturedRequest req = CapturedRequest._fromHttp(request);
     final MockedResponse response = await _handleCapturedRequest(req);
-    return response?.toHttp();
+    return response?._toHttp();
   }
 
   Future<dio.ResponseBody> _handleDioRequest(dio.RequestOptions request) async {
-    final CapturedRequest req = CapturedRequest.fromDio(request);
+    final CapturedRequest req = CapturedRequest._fromDio(request);
     final MockedResponse response = await _handleCapturedRequest(req);
-    return response?.toDio();
+    return response?._toDio();
   }
 
   Future<MockedResponse> _handleCapturedRequest(CapturedRequest request) async {
