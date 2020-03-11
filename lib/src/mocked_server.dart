@@ -1,5 +1,13 @@
 part of "../the_internet.dart";
 
+typedef BodyBuilder = dynamic Function(
+  CapturedRequest request,
+);
+
+typedef ResponseBuilder = MockedResponse Function(
+  CapturedRequest request,
+);
+
 class MockedServer {
   final String _baseUrl;
   final Map<String, List<_CallHandler>> _handlers;
@@ -11,87 +19,93 @@ class MockedServer {
 
   void get(
     String pathTemplate, {
-    int code: _kDefaultCode,
-    Map<String, String> headers: _kDefaultHeaders,
-    dynamic body,
-    ResponseBuilder response,
-    int times,
-  }) =>
+        int code,
+        Map<String, String> headers,
+        dynamic body,
+        BodyBuilder bodyBuilder,
+        ResponseBuilder responseBuilder,
+        int times,
+      }) =>
       _addHandler(
         "GET",
         pathTemplate,
         times,
-        _chooseBuilder(response, body, code, headers),
+        _chooseBuilder(responseBuilder, bodyBuilder, body, code, headers),
       );
 
   void post(String pathTemplate, {
-    int code: _kDefaultCode,
-    Map<String, String> headers: _kDefaultHeaders,
+    int code,
+    Map<String, String> headers,
     dynamic body,
-    ResponseBuilder response,
+    BodyBuilder bodyBuilder,
+    ResponseBuilder responseBuilder,
     int times,
   }) =>
       _addHandler(
         "POST",
         pathTemplate,
         times,
-        _chooseBuilder(response, body, code, headers),
+        _chooseBuilder(responseBuilder, bodyBuilder, body, code, headers),
       );
 
   void put(String pathTemplate, {
-    int code: _kDefaultCode,
-    Map<String, String> headers: _kDefaultHeaders,
+    int code,
+    Map<String, String> headers,
     dynamic body,
-    ResponseBuilder response,
+    BodyBuilder bodyBuilder,
+    ResponseBuilder responseBuilder,
     int times,
   }) =>
       _addHandler(
         "PUT",
         pathTemplate,
         times,
-        _chooseBuilder(response, body, code, headers),
+        _chooseBuilder(responseBuilder, bodyBuilder, body, code, headers),
       );
 
   void patch(String pathTemplate, {
-    int code: _kDefaultCode,
-    Map<String, String> headers: _kDefaultHeaders,
+    int code,
+    Map<String, String> headers,
     dynamic body,
-    ResponseBuilder response,
+    BodyBuilder bodyBuilder,
+    ResponseBuilder responseBuilder,
     int times,
   }) =>
       _addHandler(
         "PATCH",
         pathTemplate,
         times,
-        _chooseBuilder(response, body, code, headers),
+        _chooseBuilder(responseBuilder, bodyBuilder, body, code, headers),
       );
 
   void delete(String pathTemplate, {
-    int code: _kDefaultCode,
-    Map<String, String> headers: _kDefaultHeaders,
+    int code,
+    Map<String, String> headers,
     dynamic body,
-    ResponseBuilder response,
+    BodyBuilder bodyBuilder,
+    ResponseBuilder responseBuilder,
     int times,
   }) =>
       _addHandler(
         "DELETE",
         pathTemplate,
         times,
-        _chooseBuilder(response, body, code, headers),
+        _chooseBuilder(responseBuilder, bodyBuilder, body, code, headers),
       );
 
   void head(String pathTemplate, {
-    int code: _kDefaultCode,
-    Map<String, String> headers: _kDefaultHeaders,
+    int code,
+    Map<String, String> headers,
     dynamic body,
-    ResponseBuilder response,
+    BodyBuilder bodyBuilder,
+    ResponseBuilder responseBuilder,
     int times,
   }) =>
       _addHandler(
         "HEAD",
         pathTemplate,
         times,
-        _chooseBuilder(response, body, code, headers),
+        _chooseBuilder(responseBuilder, bodyBuilder, body, code, headers),
       );
 
   void _addHandler(String method, String pathTemplate, int times,
@@ -103,7 +117,7 @@ class MockedServer {
       for (var handler in _handlers[key]) {
         if (handler.times == null)
           throw StateError(
-              "There can only be one infinite handler. Did you forget to specify the times before argument?");
+              "There can only be one infinite handler. Did you forget to specify the times argument before?");
       }
     }
 
@@ -112,31 +126,36 @@ class MockedServer {
     );
   }
 
-  ResponseBuilder _chooseBuilder(ResponseBuilder response, body, int code,
-      Map<String, String> headers) {
-    ResponseBuilder builder;
-    if (response != null) {
-      builder = response;
+  ResponseBuilder _chooseBuilder(ResponseBuilder responseBuilder,
+      BodyBuilder bodyBuilder,
+      dynamic body,
+      int code,
+      Map<String, String> headers,) {
+    final hasBodyBuilder = bodyBuilder != null;
+    final hasResponseBuilder = responseBuilder != null;
+    final hasStatics = body != null || code != null || headers != null;
+
+    final hasBadArguments = [hasBodyBuilder, hasResponseBuilder, hasStatics]
+        .fold(0, (sum, x) => sum + (x ? 1 : 0)) >
+        1;
+
+    if (hasBadArguments)
+      throw ArgumentError(
+          "You must specify only one of [responseBuilder], [bodyBuilder] or a combination of [body, code, headers]");
+
+    if (responseBuilder != null) {
+      return responseBuilder;
+    } else if (bodyBuilder != null) {
+      return (request) => _buildResponse(code, bodyBuilder(request), headers);
     } else {
-      if (body is BodyBuilder) {
-        builder = (request) => _buildResponse(code, body(request), headers);
-      } else if (body != null) {
-        builder = (request) => _buildResponse(code, body, headers);
-      } else {
-        builder = (request) => MockedResponse(code, headers: headers);
-      }
+      return (request) => _buildResponse(code, body, headers);
     }
-    return builder;
   }
 
   MockedResponse _buildResponse(int code, dynamic body,
       Map<String, String> headers) {
-    if (body is String) {
-      return MockedResponse(
-        code,
-        body: body,
-        headers: headers,
-      );
+    if (body == null || body is String) {
+      return MockedResponse(code, headers: headers, body: body);
     } else {
       return MockedResponse.fromJson(
         body,
@@ -163,7 +182,9 @@ class MockedServer {
   }
 
   CapturedCall nextCapturedCall() {
-    if (_callQueue.isEmpty) throw StateError("Ther are no captured calls");
+    if (_callQueue.isEmpty) {
+      throw StateError("There are no captured calls");
+    }
     return _callQueue.removeLast();
   }
 

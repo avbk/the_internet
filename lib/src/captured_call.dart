@@ -88,20 +88,22 @@ class MockedResponse {
   final Map<String, String> headers;
 
   MockedResponse(
-    this.code, {
-    this.body = _kDefaultBody,
-    this.headers = _kDefaultHeaders,
-  });
+    int code, {
+    String body = _kDefaultBody,
+    Map<String, String> headers = _kDefaultHeaders,
+  })  : this.code = code ?? _kDefaultCode,
+        this.headers = headers ?? _kDefaultHeaders,
+        this.body = body ?? _kDefaultBody;
 
   MockedResponse.fromJson(
     dynamic json, {
-    int code: _kDefaultCode,
-    Map<String, String> headers: _kDefaultHeaders,
+    int code,
+    Map<String, String> headers,
   }) : this(
           code,
           body: jsonEncode(json),
-          headers: Map.of(headers)
-            ..addAll({"Content-Type": "application/json"}),
+    headers: Map.of(headers ?? _kDefaultHeaders)
+      ..addAll({"Content-Type": "application/json"}),
         );
 
   http.Response toHttp() => http.Response(body, code, headers: headers);

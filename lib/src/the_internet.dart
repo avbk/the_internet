@@ -14,7 +14,9 @@ class TheInternet {
   dio.HttpClientAdapter createDioAdapter() => _MockDioAdapter(this);
 
   MockedServer mockServer(String baseUrl) {
-    _servers[baseUrl] = MockedServer._(baseUrl);
+    if (!_servers.containsKey(baseUrl)) {
+      _servers[baseUrl] = MockedServer._(baseUrl);
+    }
     return _servers[baseUrl];
   }
 

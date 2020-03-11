@@ -78,7 +78,8 @@ void main() {
     test(
       "allows to respond with json based on regex",
       configure: (server) => server.get("/messages/{name}",
-          body: (request) => {"message": "Hello ${request.args["name"]}"}),
+          bodyBuilder: (request) =>
+              {"message": "Hello ${request.args["name"]}"}),
       request: {"path": "/messages/people"},
       response: {
         "code": 200,
@@ -91,7 +92,7 @@ void main() {
       "allows to respond with json based on regex and headers",
       configure: (server) =>
           server.get("/messages/{name}",
-              body: (CapturedRequest request) =>
+              bodyBuilder: (request) =>
               {
                 "message":
                 "${request.headers["greeting"]} ${request.args["name"]}"
@@ -112,7 +113,7 @@ void main() {
       configure: (server) {
         server.get(
           "/messages/{name}",
-          response: (request) =>
+          responseBuilder: (request) =>
               MockedResponse(200,
                   body: "${request.headers["greeting"]} ${request
                       .args["name"]}"),
@@ -133,7 +134,7 @@ void main() {
       "Query Parameters are supported",
       configure: (server) {
         server.get("/messages{?filter}",
-            body: (CapturedRequest request) => request.args["filter"]);
+            bodyBuilder: (request) => request.args["filter"]);
       },
       request: {
         "path": "/messages",

@@ -1,19 +1,5 @@
 part of "../the_internet.dart";
 
-typedef BodyBuilder = dynamic Function(
-  CapturedRequest request,
-);
-
-typedef ResponseBuilder = MockedResponse Function(
-  CapturedRequest request,
-);
-
-typedef SimpleJsonResponseBuilder = dynamic Function(List<String> args);
-typedef ComplexJsonResponseBuilder = dynamic Function(
-  CapturedRequest request,
-  List<String> args,
-);
-
 class _CallHandler {
   final String method;
   final UriParser _pathParser;
