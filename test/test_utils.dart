@@ -118,8 +118,14 @@ void multiClientTestGroup(String method, MultiClientTestGroup innerGroup) {
       dio.Dio dioClient;
       String url;
 
-      Future<http.Response> executeSimpleHttpCall(_simpleHttpRequest call) =>
-          call(url, headers: request["headers"]);
+      Future<http.Response> executeSimpleHttpCall(_simpleHttpRequest call) {
+        String urlWithQueryParams = url;
+        if (request["query"] is Map) {
+          urlWithQueryParams += "?";
+          urlWithQueryParams += dio.Transformer.urlEncodeMap(request["query"]);
+        }
+        return call(urlWithQueryParams, headers: request["headers"]);
+      }
 
       Future<http.Response> executeBodyHttpCall(_bodyHttpRequest call) {
         if (request["formData"] != null)
@@ -152,7 +158,8 @@ void multiClientTestGroup(String method, MultiClientTestGroup innerGroup) {
       );
 
       Future<dio.Response> executeSimpleDioCall(_simpleDioRequest call) {
-        return call(url, options: dioOptions);
+        return call(url,
+            queryParameters: request["query"], options: dioOptions);
       }
 
       Future<dio.Response> executeSimpleBodyDioCall(
@@ -195,7 +202,8 @@ void multiClientTestGroup(String method, MultiClientTestGroup innerGroup) {
           }
 
           if (recorded["request"] != null) {
-            expect(recordedCall.request.url, recorded["request"]["url"]);
+            expect(recordedCall.request.uri,
+                Uri.parse(recorded["request"]["url"]));
             expect(recordedCall.request.body?.asString,
                 recorded["request"]["bodyAsString"]);
             expect(recordedCall.request.body?.asFormData,

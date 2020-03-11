@@ -77,8 +77,8 @@ void main() {
 
     test(
       "allows to respond with json based on regex",
-      configure: (server) => server.get("/messages/(.*)",
-          body: (args) => {"message": "Hello ${args[0]}"}),
+      configure: (server) => server.get("/messages/{name}",
+          body: (request) => {"message": "Hello ${request.args["name"]}"}),
       request: {"path": "/messages/people"},
       response: {
         "code": 200,
@@ -89,9 +89,13 @@ void main() {
 
     test(
       "allows to respond with json based on regex and headers",
-      configure: (server) => server.get("/messages/(.*)",
-          body: (CapturedRequest request, List<String> args) =>
-              {"message": "${request.headers["greeting"]} ${args[0]}"}),
+      configure: (server) =>
+          server.get("/messages/{name}",
+              body: (CapturedRequest request) =>
+              {
+                "message":
+                "${request.headers["greeting"]} ${request.args["name"]}"
+              }),
       request: {
         "path": "/messages/people",
         "headers": {"greeting": "Hi"},
@@ -107,9 +111,11 @@ void main() {
       "allows to respond with anything based on regex and headers",
       configure: (server) {
         server.get(
-          "/messages/(.*)",
-          response: (request, args) => MockedResponse(200,
-              body: "${request.headers["greeting"]} ${args[0]}"),
+          "/messages/{name}",
+          response: (request) =>
+              MockedResponse(200,
+                  body: "${request.headers["greeting"]} ${request
+                      .args["name"]}"),
         );
       },
       request: {
@@ -119,6 +125,23 @@ void main() {
       response: {
         "code": 200,
         "body": "Hi people",
+        "headers": isEmpty,
+      },
+    );
+
+    test(
+      "Query Parameters are supported",
+      configure: (server) {
+        server.get("/messages{?filter}",
+            body: (CapturedRequest request) => request.args["filter"]);
+      },
+      request: {
+        "path": "/messages",
+        "query": {"filter": "all"},
+      },
+      response: {
+        "code": 200,
+        "body": "all",
         "headers": isEmpty,
       },
     );

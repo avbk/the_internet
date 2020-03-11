@@ -7,7 +7,7 @@ void main() {
   multiClientTestGroup("PATCH", (test) {
     test("respond with input data and check recorded call",
         configure: (server) => server.patch("/messages",
-            body: (CapturedRequest request, _) =>
+            body: (CapturedRequest request) =>
                 {"newMessage": "message ${request.body.asFormData["title"]}"}),
         request: {
           "path": "/messages",

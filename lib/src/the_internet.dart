@@ -67,7 +67,7 @@ class EndOfTheInternetError implements Exception {
   EndOfTheInternetError(this.internet, this.request);
 
   String get message => """
-Could not find a handler for: ${request.method} ${request.url}
+Could not find a handler for: ${request.method} ${request.uri}
 
 Installed handlers:
 ${internet.humanReadableMatchers}

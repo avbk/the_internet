@@ -7,7 +7,7 @@ void main() {
   multiClientTestGroup("PUT", (test) {
     test("respond with input data and check recorded call",
         configure: (server) => server.put("/messages",
-            body: (CapturedRequest request, _) =>
+            body: (CapturedRequest request) =>
                 {"newMessage": "message ${request.body.asFormData["title"]}"}),
         request: {
           "path": "/messages",

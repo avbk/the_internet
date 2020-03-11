@@ -29,7 +29,7 @@ void main() {
       server.get("/messages", body: ["Hello"]);
 
       expect(
-            () async => await client.get("https://example.com/unknown"),
+        () async => await client.get("https://example.com/unknown"),
         throwsA(isA<EndOfTheInternetError>()),
       );
     });
@@ -94,6 +94,19 @@ void main() {
         throwsA(isA<EndOfTheInternetError>()),
       );
     });
+    test("complex path", (server, client) async {
+      server.get("/messages/{id}/tags/{tag}/search{?query,sort}");
+      await client.get(
+          "https://example.com/messages/17/tags/news/search?query=foo&sort=asc");
+
+      var call = server.nextCapturedCall();
+      expect(call.request.args, {
+        "id": "17",
+        "tag": "news",
+        "query": "foo",
+        "sort": "asc",
+      });
+    });
 
     test("the whole internet can be reset", (_, __) async {
       TheInternet internet = TheInternet();
@@ -112,6 +125,23 @@ void main() {
         () async => await client.get("https://example.com/messages"),
         throwsA(isA<EndOfTheInternetError>()),
       );
+    });
+
+    test("two different servers work for the same path", (_, __) async {
+      TheInternet internet = TheInternet();
+      MockedServer server1 = internet.mockServer("https://example.com");
+      MockedServer server2 = internet.mockServer("https://foobar.com");
+      BaseClient client = internet.createHttpClient();
+
+      server1.get("/messages", body: []);
+      server2.get("/messages", code: 404);
+
+      final response1 = await client.get("https://example.com/messages");
+      final response2 = await client.get("https://foobar.com/messages");
+
+      expect(response1.statusCode, 200);
+      expect(response1.body, "[]");
+      expect(response2.statusCode, 404);
     });
   });
 }

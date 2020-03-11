@@ -56,7 +56,7 @@ void main() {
 
     test("respond with input data",
         configure: (server) => server.post("/messages",
-            body: (CapturedRequest request, _) =>
+            body: (CapturedRequest request) =>
                 {"newMessage": "message ${request.body.asFormData["title"]}"}),
         request: {
           "path": "/messages",

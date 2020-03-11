@@ -10,7 +10,7 @@ class MockedServer {
         _callQueue = [];
 
   void get(
-    String pathRegex, {
+    String pathTemplate, {
     int code: _kDefaultCode,
     Map<String, String> headers: _kDefaultHeaders,
     dynamic body,
@@ -19,13 +19,12 @@ class MockedServer {
   }) =>
       _addHandler(
         "GET",
-        pathRegex,
+        pathTemplate,
         times,
         _chooseBuilder(response, body, code, headers),
       );
 
-  void post(
-    String pathRegex, {
+  void post(String pathTemplate, {
     int code: _kDefaultCode,
     Map<String, String> headers: _kDefaultHeaders,
     dynamic body,
@@ -34,13 +33,12 @@ class MockedServer {
   }) =>
       _addHandler(
         "POST",
-        pathRegex,
+        pathTemplate,
         times,
         _chooseBuilder(response, body, code, headers),
       );
 
-  void put(
-    String pathRegex, {
+  void put(String pathTemplate, {
     int code: _kDefaultCode,
     Map<String, String> headers: _kDefaultHeaders,
     dynamic body,
@@ -49,13 +47,12 @@ class MockedServer {
   }) =>
       _addHandler(
         "PUT",
-        pathRegex,
+        pathTemplate,
         times,
         _chooseBuilder(response, body, code, headers),
       );
 
-  void patch(
-    String pathRegex, {
+  void patch(String pathTemplate, {
     int code: _kDefaultCode,
     Map<String, String> headers: _kDefaultHeaders,
     dynamic body,
@@ -64,13 +61,12 @@ class MockedServer {
   }) =>
       _addHandler(
         "PATCH",
-        pathRegex,
+        pathTemplate,
         times,
         _chooseBuilder(response, body, code, headers),
       );
 
-  void delete(
-    String pathRegex, {
+  void delete(String pathTemplate, {
     int code: _kDefaultCode,
     Map<String, String> headers: _kDefaultHeaders,
     dynamic body,
@@ -79,13 +75,12 @@ class MockedServer {
   }) =>
       _addHandler(
         "DELETE",
-        pathRegex,
+        pathTemplate,
         times,
         _chooseBuilder(response, body, code, headers),
       );
 
-  void head(
-    String pathRegex, {
+  void head(String pathTemplate, {
     int code: _kDefaultCode,
     Map<String, String> headers: _kDefaultHeaders,
     dynamic body,
@@ -94,14 +89,14 @@ class MockedServer {
   }) =>
       _addHandler(
         "HEAD",
-        pathRegex,
+        pathTemplate,
         times,
         _chooseBuilder(response, body, code, headers),
       );
 
-  void _addHandler(
-      String method, String pathRegex, int times, ResponseBuilder builder) {
-    var key = "$method $pathRegex";
+  void _addHandler(String method, String pathTemplate, int times,
+      ResponseBuilder builder) {
+    var key = "$method $pathTemplate";
     if (!_handlers.containsKey(key)) {
       _handlers[key] = [];
     } else {
@@ -113,54 +108,53 @@ class MockedServer {
     }
 
     _handlers[key].add(
-      _CallHandler(method, _baseUrl, pathRegex, builder, times),
+      _CallHandler(method, pathTemplate, builder, times),
     );
   }
 
-  ResponseBuilder _chooseBuilder(
-      ResponseBuilder response, body, int code, Map<String, String> headers) {
+  ResponseBuilder _chooseBuilder(ResponseBuilder response, body, int code,
+      Map<String, String> headers) {
     ResponseBuilder builder;
     if (response != null) {
       builder = response;
     } else {
-      if (body is String) {
-        builder = (request, args) => MockedResponse(
-              code,
-              body: body,
-              headers: headers,
-            );
-      } else if (body is SimpleJsonResponseBuilder) {
-        builder = (request, args) => MockedResponse.fromJson(
-              body(args),
-              code: code,
-              headers: headers,
-            );
-      } else if (body is ComplexJsonResponseBuilder) {
-        builder = (request, args) => MockedResponse.fromJson(
-              body(request, args),
-              code: code,
-              headers: headers,
-            );
+      if (body is BodyBuilder) {
+        builder = (request) => _buildResponse(code, body(request), headers);
       } else if (body != null) {
-        builder = (request, args) => MockedResponse.fromJson(
-              body,
-              code: code,
-              headers: headers,
-            );
+        builder = (request) => _buildResponse(code, body, headers);
       } else {
-        builder = (request, args) => MockedResponse(code, headers: headers);
+        builder = (request) => MockedResponse(code, headers: headers);
       }
     }
     return builder;
   }
 
+  MockedResponse _buildResponse(int code, dynamic body,
+      Map<String, String> headers) {
+    if (body is String) {
+      return MockedResponse(
+        code,
+        body: body,
+        headers: headers,
+      );
+    } else {
+      return MockedResponse.fromJson(
+        body,
+        code: code,
+        headers: headers,
+      );
+    }
+  }
+
   MockedResponse _tryHandle(CapturedRequest request) {
-    for (var handlers in _handlers.values) {
-      for (var handler in handlers) {
-        final MockedResponse response = handler._tryHandle(request);
-        if (response != null) {
-          _callQueue.add(CapturedCall(request, response));
-          return response;
+    if (request.uri.toString().startsWith(_baseUrl)) {
+      for (var handlers in _handlers.values) {
+        for (var handler in handlers) {
+          final MockedResponse response = handler._tryHandle(request);
+          if (response != null) {
+            _callQueue.add(CapturedCall(request, response));
+            return response;
+          }
         }
       }
     }
@@ -169,8 +163,7 @@ class MockedServer {
   }
 
   CapturedCall nextCapturedCall() {
-    if (_callQueue.isEmpty)
-      throw StateError("Ther are no captured calls");
+    if (_callQueue.isEmpty) throw StateError("Ther are no captured calls");
     return _callQueue.removeLast();
   }
 

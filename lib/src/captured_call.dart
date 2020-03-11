@@ -11,18 +11,20 @@ class CapturedRequest {
   final Map<String, String> headers;
   final CapturedBody body;
   final String method;
-  final String url;
+  final Uri uri;
+
+  Map<String, String> args;
 
   CapturedRequest.fromHttp(http.Request request)
       : this.headers = request.headers,
         this.method = request.method,
-        this.url = request.url.toString(),
+        this.uri = request.url,
         this.body = CapturedBody.fromHttp(request);
 
   CapturedRequest.fromDio(dio.RequestOptions request)
       : this.headers = _convertHeaders(request.headers),
         this.method = request.method,
-        this.url = request.uri.toString(),
+        this.uri = request.uri,
         this.body = CapturedBody.fromDio(request);
 
   static Map<String, String> _convertHeaders(Map<String, dynamic> headers) =>
