@@ -98,7 +98,7 @@ class TheInternet {
 
   Future<MockedResponse> _handleCapturedRequest(CapturedRequest request) async {
     for (var server in _servers.values) {
-      final MockedResponse response = server._tryHandle(request);
+      final MockedResponse response = await server._tryHandle(request);
       if (response != null) {
         return response;
       }

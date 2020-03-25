@@ -11,7 +11,7 @@ class _CallHandler {
       this._buildResponse,
       this.times,) :this._pathParser = UriParser(UriTemplate("$pathTemplate"));
 
-  MockedResponse _tryHandle(CapturedRequest request) {
+  Future<MockedResponse> _tryHandle(CapturedRequest request) async {
     if (times == null || times > 0) {
       if (request.method.toUpperCase() == method.toUpperCase()) {
         if (_pathParser.matches(request.uri)) {

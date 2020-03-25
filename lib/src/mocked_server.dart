@@ -4,11 +4,11 @@ part of "../the_internet.dart";
 ///
 /// The body returned by this function can either be:
 /// * a String, which will directly used as the response body
-/// * anything else will be converted to a JSON response
+/// * anything else, which will be converted to a JSON response
 ///
 /// The provided [CapturedRequest] can be used to access path and
 /// query arguments as well as headers.
-typedef BodyBuilder = dynamic Function(
+typedef BodyBuilder = FutureOr<dynamic> Function(
   CapturedRequest request,
 );
 
@@ -16,9 +16,9 @@ typedef BodyBuilder = dynamic Function(
 ///
 /// The provided [CapturedRequest] can be used to access path and
 /// query arguments as well as headers.
-typedef ResponseBuilder = MockedResponse Function(
-  CapturedRequest request,
-);
+typedef ResponseBuilder = FutureOr<MockedResponse> Function(
+    CapturedRequest request,
+    );
 
 /// A [MockedServer] is a set of handlers that are used to mock a real
 /// server.
@@ -38,14 +38,14 @@ class MockedServer {
   /// Registers a new handler for a GET request.
   ///
   /// The [pathTemplate] supports [RFC 6570 URI Templates][http://tools.ietf.org/html/rfc6570]
-  /// and any path and query arguments can be used in the [bodyBuilder] or the
-  /// [responseBuilder].
+  /// and any path and query arguments can be used in the [BodyBuilder] or the
+  /// [ResponseBuilder].
   ///
   /// For simple responses it is usually enough to specify a [body], which will
   /// be used as a JSON response. Also a [code] (defaults is `200`)
   /// or [headers] (defaults to `{}`) can be specified.
   ///
-  /// Only one of [bodyBuilder], [responseBuilder] or any of the static values
+  /// Only one of [BodyBuilder], [ResponseBuilder] or any of the static values
   /// such as [body] must be given or otherwise an [ArgumentError] will be
   /// thrown.
   ///
@@ -73,14 +73,14 @@ class MockedServer {
   /// Registers a new handler for a POST request.
   ///
   /// The [pathTemplate] supports [RFC 6570 URI Templates][http://tools.ietf.org/html/rfc6570]
-  /// and any path and query arguments can be used in the [bodyBuilder] or the
-  /// [responseBuilder].
+  /// and any path and query arguments can be used in the [BodyBuilder] or the
+  /// [ResponseBuilder].
   ///
   /// For simple responses it is usually enough to specify a [body], which will
   /// be used as a JSON response. Also a [code] (defaults is `200`)
   /// or [headers] (defaults to `{}`) can be specified.
   ///
-  /// Only one of [bodyBuilder], [responseBuilder] or any of the static values
+  /// Only one of [BodyBuilder], [ResponseBuilder] or any of the static values
   /// such as [body] must be given or otherwise an [ArgumentError] will be
   /// thrown.
   ///
@@ -107,14 +107,14 @@ class MockedServer {
   /// Registers a new handler for a PUT request.
   ///
   /// The [pathTemplate] supports [RFC 6570 URI Templates][http://tools.ietf.org/html/rfc6570]
-  /// and any path and query arguments can be used in the [bodyBuilder] or the
-  /// [responseBuilder].
+  /// and any path and query arguments can be used in the [BodyBuilder] or the
+  /// [ResponseBuilder].
   ///
   /// For simple responses it is usually enough to specify a [body], which will
   /// be used as a JSON response. Also a [code] (defaults is `200`)
   /// or [headers] (defaults to `{}`) can be specified.
   ///
-  /// Only one of [bodyBuilder], [responseBuilder] or any of the static values
+  /// Only one of [BodyBuilder], [ResponseBuilder] or any of the static values
   /// such as [body] must be given or otherwise an [ArgumentError] will be
   /// thrown.
   ///
@@ -141,14 +141,14 @@ class MockedServer {
   /// Registers a new handler for a PATCH request.
   ///
   /// The [pathTemplate] supports [RFC 6570 URI Templates][http://tools.ietf.org/html/rfc6570]
-  /// and any path and query arguments can be used in the [bodyBuilder] or the
-  /// [responseBuilder].
+  /// and any path and query arguments can be used in the [BodyBuilder] or the
+  /// [ResponseBuilder].
   ///
   /// For simple responses it is usually enough to specify a [body], which will
   /// be used as a JSON response. Also a [code] (defaults is `200`)
   /// or [headers] (defaults to `{}`) can be specified.
   ///
-  /// Only one of [bodyBuilder], [responseBuilder] or any of the static values
+  /// Only one of [BodyBuilder], [ResponseBuilder] or any of the static values
   /// such as [body] must be given or otherwise an [ArgumentError] will be
   /// thrown.
   ///
@@ -175,14 +175,14 @@ class MockedServer {
   /// Registers a new handler for a DELETE request.
   ///
   /// The [pathTemplate] supports [RFC 6570 URI Templates][http://tools.ietf.org/html/rfc6570]
-  /// and any path and query arguments can be used in the [bodyBuilder] or the
-  /// [responseBuilder].
+  /// and any path and query arguments can be used in the [BodyBuilder] or the
+  /// [ResponseBuilder].
   ///
   /// For simple responses it is usually enough to specify a [body], which will
   /// be used as a JSON response. Also a [code] (defaults is `200`)
   /// or [headers] (defaults to `{}`) can be specified.
   ///
-  /// Only one of [bodyBuilder], [responseBuilder] or any of the static values
+  /// Only one of [BodyBuilder], [ResponseBuilder] or any of the static values
   /// such as [body] must be given or otherwise an [ArgumentError] will be
   /// thrown.
   ///
@@ -209,14 +209,14 @@ class MockedServer {
   /// Registers a new handler for a HEAD request.
   ///
   /// The [pathTemplate] supports [RFC 6570 URI Templates][http://tools.ietf.org/html/rfc6570]
-  /// and any path and query arguments can be used in the [bodyBuilder] or the
-  /// [responseBuilder].
+  /// and any path and query arguments can be used in the [BodyBuilder] or the
+  /// [ResponseBuilder].
   ///
   /// For simple responses it is usually enough to specify a [body], which will
   /// be used as a JSON response. Also a [code] (defaults is `200`)
   /// or [headers] (defaults to `{}`) can be specified.
   ///
-  /// Only one of [bodyBuilder], [responseBuilder] or any of the static values
+  /// Only one of [BodyBuilder], [ResponseBuilder] or any of the static values
   /// such as [body] must be given or otherwise an [ArgumentError] will be
   /// thrown.
   ///
@@ -315,7 +315,8 @@ class MockedServer {
     if (responseBuilder != null) {
       return responseBuilder;
     } else if (bodyBuilder != null) {
-      return (request) => _buildResponse(code, bodyBuilder(request), headers);
+      return (request) async =>
+          _buildResponse(code, await bodyBuilder(request), headers);
     } else {
       return (request) => _buildResponse(code, body, headers);
     }
@@ -334,11 +335,11 @@ class MockedServer {
     }
   }
 
-  MockedResponse _tryHandle(CapturedRequest request) {
+  Future<MockedResponse> _tryHandle(CapturedRequest request) async {
     if (request.uri.toString().startsWith(_baseUrl)) {
       for (var handlers in _handlers.values) {
         for (var handler in handlers) {
-          final MockedResponse response = handler._tryHandle(request);
+          final MockedResponse response = await handler._tryHandle(request);
           if (response != null) {
             _callQueue.add(CapturedCall._(request, response));
             return response;

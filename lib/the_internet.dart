@@ -3,6 +3,7 @@
 /// Use [TheInternet] to create and configure a MockHttpClient.
 library the_internet;
 
+import 'dart:async';
 import "dart:convert";
 
 import "package:dio/dio.dart" as dio;
