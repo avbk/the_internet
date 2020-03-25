@@ -4,20 +4,84 @@ const _kDefaultCode = 200;
 const _kDefaultBody = "";
 const _kDefaultHeaders = <String, String>{};
 
+/// [TheInternet] replaces the real internet with a local mocked and controlled
+/// version.
+///
+/// Use [mockServer] to create a [MockedServer], which itself can be configured:
+/// ```dart
+///   TheInternet internet = TheInternet();
+///   MockedServer backend = internet.mockServer("https://backend.com/api");
+///   backend.get("/todo/{id}", code: 404, body: {"error: "Unknown Todo"});
+/// ```
+///
+/// [TheInternet] supports mocking the real internet for [http] as well as
+/// for [dio]
+///   * Use [createHttpClient] for [http] to create a [BaseClient] that only
+///   communicates with [TheInternet].
+///   * Use [createDioAdapter] for [dio] to create a [HttpClientAdapter] that
+///   only communicates with [TheInternet]
+///
+/// ```dart
+/// BaseClient client = internet.createHttpClient();
+/// Response response = await client.get("/todo/14");
+///
+/// expect(response.statusCode, 404);
+/// ```
 class TheInternet {
   final Map<String, MockedServer> _servers;
 
+  /// Creates a instance of [TheInternet]
+  ///
+  /// Usually only one instance is needed, but it is possible to have multiple
+  /// [TheInternet]s at the same time. Note that the clients created in one
+  /// won't be able to access [MockedServer]s of the other [TheInternet]
+  /// instance.
   TheInternet() : _servers = {};
 
+  /// Creates a mocked version of the [BaseClient] that only
+  /// communicates with [TheInternet].
   http.BaseClient createHttpClient() => MockClient(_handleHttpRequest);
 
+  /// Creates a mocked version of the [HttpClientAdapter] that only
+  /// communicates with [TheInternet].
+  ///
+  /// This adapter needs to be assigned to the [httpClientAdapter] Property of
+  /// the [Dio] instance.
   dio.HttpClientAdapter createDioAdapter() => _MockDioAdapter(this);
 
+  /// Returns a [MockedServer] for a given baseUrl.
+  ///
+  /// If there already exists a server fo the given baseUrl, the
+  /// existing [MockedServer] is returned.
   MockedServer mockServer(String baseUrl) {
     if (!_servers.containsKey(baseUrl)) {
       _servers[baseUrl] = MockedServer._(baseUrl);
     }
     return _servers[baseUrl];
+  }
+
+  /// Get a human readable summary about all the [MockedServer]s and the
+  /// installed handlers.
+  String get humanReadableMatchers {
+    String message = "";
+    for (var server in _servers.values) {
+      message += "${server._baseUrl}\n";
+      for (var methodAndPath in server._handlers.keys) {
+        message += "\t${methodAndPath}\n";
+      }
+    }
+    return message;
+  }
+
+  /// Resets [TheInternet].
+  ///
+  /// It will also reset all the registered [MockedServer]s  before dropping
+  /// them afterwards.
+  void reset() {
+    for (var server in _servers.values) {
+      server.reset();
+    }
+    _servers.clear();
   }
 
   Future<http.Response> _handleHttpRequest(http.Request request) async {
@@ -42,26 +106,13 @@ class TheInternet {
 
     throw EndOfTheInternetError(this, request);
   }
-
-  String get humanReadableMatchers {
-    String message = "";
-    for (var server in _servers.values) {
-      message += "${server._baseUrl}\n";
-      for (var methodAndPath in server._handlers.keys) {
-        message += "\t${methodAndPath}\n";
-      }
-    }
-    return message;
-  }
-
-  void reset() {
-    for (var server in _servers.values) {
-      server.reset();
-    }
-    _servers.clear();
-  }
 }
 
+/// This Error is thrown whenever a request is received which cannot be
+/// handled by [TheInternet].
+///
+/// The [CapturedRequest] and [TheInternet] are provided with this this error
+/// for further investigation.
 class EndOfTheInternetError implements Exception {
   final TheInternet internet;
   final CapturedRequest request;

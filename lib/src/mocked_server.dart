@@ -41,17 +41,19 @@ class MockedServer {
   /// and any path and query arguments can be used in the [bodyBuilder] or the
   /// [responseBuilder].
   ///
-  /// For simple responses it is usually enough to specify a [body]. Also a
-  /// [code] (defaults is `200`) or [headers] (defaults to `{}`) can be
-  /// specified.
+  /// For simple responses it is usually enough to specify a [body], which will
+  /// be used as a JSON response. Also a [code] (defaults is `200`)
+  /// or [headers] (defaults to `{}`) can be specified.
   ///
-  /// Only one of [bodyBuilder], [responseBuilder] or a static value such as
-  /// [body] must given otherwise an [ArgumentError].
+  /// Only one of [bodyBuilder], [responseBuilder] or any of the static values
+  /// such as [body] must be given or otherwise an [ArgumentError] will be
+  /// thrown.
   ///
-  /// By default this handler will respond infinitely. But it can be restricted
-  /// to respond to [times]. After being triggered [times], the next handler for
-  /// the same url will be executed for the following request. If there are no
-  /// more handlers a [EndOfTheInternetError] will be thrown.
+  /// By default this handler will respond infinitely often. But it can be
+  /// restricted to respond only [times] times. After being triggered [times]
+  /// times, the next handler for the same url will be executed for the
+  /// following request. If there are no more handlers a [EndOfTheInternetError]
+  /// will be thrown.
   void get(
     String pathTemplate, {
     int code,
@@ -74,19 +76,20 @@ class MockedServer {
   /// and any path and query arguments can be used in the [bodyBuilder] or the
   /// [responseBuilder].
   ///
-  /// For simple responses it is usually enough to specify a [body]. Also a
-  /// [code] (defaults is `200`) or [headers] (defaults to `{}`) can be
-  /// specified.
+  /// For simple responses it is usually enough to specify a [body], which will
+  /// be used as a JSON response. Also a [code] (defaults is `200`)
+  /// or [headers] (defaults to `{}`) can be specified.
   ///
-  /// Only one of [bodyBuilder], [responseBuilder] or a static value such as
-  /// [body] must given otherwise an [ArgumentError].
+  /// Only one of [bodyBuilder], [responseBuilder] or any of the static values
+  /// such as [body] must be given or otherwise an [ArgumentError] will be
+  /// thrown.
   ///
-  /// By default this handler will respond infinitely. But it can be restricted
-  /// to respond to [times]. After being triggered [times], the next handler for
-  /// the same url will be executed for the following request. If there are no
-  /// more handlers a [EndOfTheInternetError] will be thrown.
-  void post(
-    String pathTemplate, {
+  /// By default this handler will respond infinitely often. But it can be
+  /// restricted to respond only [times] times. After being triggered [times]
+  /// times, the next handler for the same url will be executed for the
+  /// following request. If there are no more handlers a [EndOfTheInternetError]
+  /// will be thrown.
+  void post(String pathTemplate, {
     int code,
     Map<String, String> headers,
     dynamic body,
@@ -107,19 +110,20 @@ class MockedServer {
   /// and any path and query arguments can be used in the [bodyBuilder] or the
   /// [responseBuilder].
   ///
-  /// For simple responses it is usually enough to specify a [body]. Also a
-  /// [code] (defaults is `200`) or [headers] (defaults to `{}`) can be
-  /// specified.
+  /// For simple responses it is usually enough to specify a [body], which will
+  /// be used as a JSON response. Also a [code] (defaults is `200`)
+  /// or [headers] (defaults to `{}`) can be specified.
   ///
-  /// Only one of [bodyBuilder], [responseBuilder] or a static value such as
-  /// [body] must given otherwise an [ArgumentError].
+  /// Only one of [bodyBuilder], [responseBuilder] or any of the static values
+  /// such as [body] must be given or otherwise an [ArgumentError] will be
+  /// thrown.
   ///
-  /// By default this handler will respond infinitely. But it can be restricted
-  /// to respond to [times]. After being triggered [times], the next handler for
-  /// the same url will be executed for the following request. If there are no
-  /// more handlers a [EndOfTheInternetError] will be thrown.
-  void put(
-    String pathTemplate, {
+  /// By default this handler will respond infinitely often. But it can be
+  /// restricted to respond only [times] times. After being triggered [times]
+  /// times, the next handler for the same url will be executed for the
+  /// following request. If there are no more handlers a [EndOfTheInternetError]
+  /// will be thrown.
+  void put(String pathTemplate, {
     int code,
     Map<String, String> headers,
     dynamic body,
@@ -140,19 +144,20 @@ class MockedServer {
   /// and any path and query arguments can be used in the [bodyBuilder] or the
   /// [responseBuilder].
   ///
-  /// For simple responses it is usually enough to specify a [body]. Also a
-  /// [code] (defaults is `200`) or [headers] (defaults to `{}`) can be
-  /// specified.
+  /// For simple responses it is usually enough to specify a [body], which will
+  /// be used as a JSON response. Also a [code] (defaults is `200`)
+  /// or [headers] (defaults to `{}`) can be specified.
   ///
-  /// Only one of [bodyBuilder], [responseBuilder] or a static value such as
-  /// [body] must given otherwise an [ArgumentError].
+  /// Only one of [bodyBuilder], [responseBuilder] or any of the static values
+  /// such as [body] must be given or otherwise an [ArgumentError] will be
+  /// thrown.
   ///
-  /// By default this handler will respond infinitely. But it can be restricted
-  /// to respond to [times]. After being triggered [times], the next handler for
-  /// the same url will be executed for the following request. If there are no
-  /// more handlers a [EndOfTheInternetError] will be thrown.
-  void patch(
-    String pathTemplate, {
+  /// By default this handler will respond infinitely often. But it can be
+  /// restricted to respond only [times] times. After being triggered [times]
+  /// times, the next handler for the same url will be executed for the
+  /// following request. If there are no more handlers a [EndOfTheInternetError]
+  /// will be thrown.
+  void patch(String pathTemplate, {
     int code,
     Map<String, String> headers,
     dynamic body,
@@ -173,19 +178,20 @@ class MockedServer {
   /// and any path and query arguments can be used in the [bodyBuilder] or the
   /// [responseBuilder].
   ///
-  /// For simple responses it is usually enough to specify a [body]. Also a
-  /// [code] (defaults is `200`) or [headers] (defaults to `{}`) can be
-  /// specified.
+  /// For simple responses it is usually enough to specify a [body], which will
+  /// be used as a JSON response. Also a [code] (defaults is `200`)
+  /// or [headers] (defaults to `{}`) can be specified.
   ///
-  /// Only one of [bodyBuilder], [responseBuilder] or a static value such as
-  /// [body] must given otherwise an [ArgumentError].
+  /// Only one of [bodyBuilder], [responseBuilder] or any of the static values
+  /// such as [body] must be given or otherwise an [ArgumentError] will be
+  /// thrown.
   ///
-  /// By default this handler will respond infinitely. But it can be restricted
-  /// to respond to [times]. After being triggered [times], the next handler for
-  /// the same url will be executed for the following request. If there are no
-  /// more handlers a [EndOfTheInternetError] will be thrown.
-  void delete(
-    String pathTemplate, {
+  /// By default this handler will respond infinitely often. But it can be
+  /// restricted to respond only [times] times. After being triggered [times]
+  /// times, the next handler for the same url will be executed for the
+  /// following request. If there are no more handlers a [EndOfTheInternetError]
+  /// will be thrown.
+  void delete(String pathTemplate, {
     int code,
     Map<String, String> headers,
     dynamic body,
@@ -206,19 +212,20 @@ class MockedServer {
   /// and any path and query arguments can be used in the [bodyBuilder] or the
   /// [responseBuilder].
   ///
-  /// For simple responses it is usually enough to specify a [body]. Also a
-  /// [code] (defaults is `200`) or [headers] (defaults to `{}`) can be
-  /// specified.
+  /// For simple responses it is usually enough to specify a [body], which will
+  /// be used as a JSON response. Also a [code] (defaults is `200`)
+  /// or [headers] (defaults to `{}`) can be specified.
   ///
-  /// Only one of [bodyBuilder], [responseBuilder] or a static value such as
-  /// [body] must given otherwise an [ArgumentError].
+  /// Only one of [bodyBuilder], [responseBuilder] or any of the static values
+  /// such as [body] must be given or otherwise an [ArgumentError] will be
+  /// thrown.
   ///
-  /// By default this handler will respond infinitely. But it can be restricted
-  /// to respond to [times]. After being triggered [times], the next handler for
-  /// the same url will be executed for the following request. If there are no
-  /// more handlers a [EndOfTheInternetError] will be thrown.
-  void head(
-    String pathTemplate, {
+  /// By default this handler will respond infinitely often. But it can be
+  /// restricted to respond only [times] times. After being triggered [times]
+  /// times, the next handler for the same url will be executed for the
+  /// following request. If there are no more handlers a [EndOfTheInternetError]
+  /// will be thrown.
+  void head(String pathTemplate, {
     int code,
     Map<String, String> headers,
     dynamic body,
