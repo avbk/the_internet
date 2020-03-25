@@ -143,5 +143,35 @@ void main() {
       expect(response1.body, "[]");
       expect(response2.statusCode, 404);
     });
+
+    test("next captured calls works in the same order as the calls are made",
+        (_, __) async {
+      TheInternet internet = TheInternet();
+      MockedServer server = internet.mockServer("https://example.com");
+      BaseClient client = internet.createHttpClient();
+
+      server.get("/messages/{test}");
+
+      await client.get("https://example.com/messages/a");
+      await client.get("https://example.com/messages/b");
+
+      expect(server.nextCapturedCall().request.args, {"test": "a"});
+      expect(server.nextCapturedCall().request.args, {"test": "b"});
+    });
+
+    test("captured calls can be omitted", (_, __) async {
+      TheInternet internet = TheInternet();
+      MockedServer server = internet.mockServer("https://example.com");
+      BaseClient client = internet.createHttpClient();
+
+      server.get("/messages/{test}");
+
+      await client.get("https://example.com/messages/a");
+      await client.get("https://example.com/messages/b");
+      await client.get("https://example.com/messages/c");
+
+      server.omitCapturedCall(count: 2);
+      expect(server.nextCapturedCall().request.args, {"test": "c"});
+    });
   });
 }

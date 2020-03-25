@@ -251,7 +251,19 @@ class MockedServer {
     if (_callQueue.isEmpty) {
       throw StateError("There are no captured calls");
     }
-    return _callQueue.removeLast();
+    return _callQueue.removeAt(0);
+  }
+
+  /// Omits the next [CapturedCall] or calls.
+  ///
+  /// As many capturedCalls as given by the argument count are omitted.
+  void omitCapturedCall({int count: 1}) {
+    if (count == null || count <= 0) {
+      throw ArgumentError("count must be a positive number");
+    }
+    for (var i = 0; i < count; i++) {
+      nextCapturedCall();
+    }
   }
 
   /// Resets the server.
