@@ -5,6 +5,13 @@ import 'package:http/http.dart' as http;
 import 'package:test/test.dart';
 import 'package:the_internet/the_internet.dart';
 
+
+Future expectNoHandler(Function call) =>
+  expectLater(
+        call,
+    throwsA(isA<EndOfTheInternetError>()),
+  );
+
 typedef HttpClientTestCallback = Function(
     MockedServer server, http.BaseClient client);
 typedef HttpClientTest = Function(

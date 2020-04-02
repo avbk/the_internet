@@ -310,6 +310,22 @@ class MockedServer {
     _callQueue.clear();
   }
 
+  /// Removes handlers for a specific url.
+  ///
+  /// If only [pathTemplate] is provided all handlers for every supported
+  /// http method are removed. Otherwise only handlers for the given method
+  /// are removed.
+  void remove(String pathTemplate, {String method}) {
+    final methods = (method == null)
+        ? ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD"]
+        : [method.toUpperCase()];
+
+    for (var m in methods) {
+      var key = "$m $pathTemplate";
+      _handlers.remove(key);
+    }
+  }
+
   void _addHandler(
     String method,
     String pathTemplate,
