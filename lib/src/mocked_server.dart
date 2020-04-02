@@ -17,8 +17,8 @@ typedef BodyBuilder = FutureOr<dynamic> Function(
 /// The provided [CapturedRequest] can be used to access path and
 /// query arguments as well as headers.
 typedef ResponseBuilder = FutureOr<MockedResponse> Function(
-    CapturedRequest request,
-    );
+  CapturedRequest request,
+);
 
 /// A [MockedServer] is a set of handlers that are used to mock a real
 /// server.
@@ -54,6 +54,9 @@ class MockedServer {
   /// times, the next handler for the same url will be executed for the
   /// following request. If there are no more handlers a [EndOfTheInternetError]
   /// will be thrown.
+  ///
+  /// The response can be delayed either by delaying within the [BodyBuilder],
+  /// [ResponseBuilder] or by setting a [delay].
   void get(
     String pathTemplate, {
     int code,
@@ -62,12 +65,14 @@ class MockedServer {
     BodyBuilder bodyBuilder,
     ResponseBuilder responseBuilder,
     int times,
+    Duration delay,
   }) =>
       _addHandler(
         "GET",
         pathTemplate,
         times,
         _chooseBuilder(responseBuilder, bodyBuilder, body, code, headers),
+        delay,
       );
 
   /// Registers a new handler for a POST request.
@@ -89,19 +94,25 @@ class MockedServer {
   /// times, the next handler for the same url will be executed for the
   /// following request. If there are no more handlers a [EndOfTheInternetError]
   /// will be thrown.
-  void post(String pathTemplate, {
+  ///
+  /// The response can be delayed either by delaying within the [BodyBuilder],
+  /// [ResponseBuilder] or by setting a [delay].
+  void post(
+    String pathTemplate, {
     int code,
     Map<String, String> headers,
     dynamic body,
     BodyBuilder bodyBuilder,
     ResponseBuilder responseBuilder,
     int times,
+    Duration delay,
   }) =>
       _addHandler(
         "POST",
         pathTemplate,
         times,
         _chooseBuilder(responseBuilder, bodyBuilder, body, code, headers),
+        delay,
       );
 
   /// Registers a new handler for a PUT request.
@@ -123,19 +134,25 @@ class MockedServer {
   /// times, the next handler for the same url will be executed for the
   /// following request. If there are no more handlers a [EndOfTheInternetError]
   /// will be thrown.
-  void put(String pathTemplate, {
+  ///
+  /// The response can be delayed either by delaying within the [BodyBuilder],
+  /// [ResponseBuilder] or by setting a [delay].
+  void put(
+    String pathTemplate, {
     int code,
     Map<String, String> headers,
     dynamic body,
     BodyBuilder bodyBuilder,
     ResponseBuilder responseBuilder,
     int times,
+    Duration delay,
   }) =>
       _addHandler(
         "PUT",
         pathTemplate,
         times,
         _chooseBuilder(responseBuilder, bodyBuilder, body, code, headers),
+        delay,
       );
 
   /// Registers a new handler for a PATCH request.
@@ -157,19 +174,25 @@ class MockedServer {
   /// times, the next handler for the same url will be executed for the
   /// following request. If there are no more handlers a [EndOfTheInternetError]
   /// will be thrown.
-  void patch(String pathTemplate, {
+  ///
+  /// The response can be delayed either by delaying within the [BodyBuilder],
+  /// [ResponseBuilder] or by setting a [delay].
+  void patch(
+    String pathTemplate, {
     int code,
     Map<String, String> headers,
     dynamic body,
     BodyBuilder bodyBuilder,
     ResponseBuilder responseBuilder,
     int times,
+    Duration delay,
   }) =>
       _addHandler(
         "PATCH",
         pathTemplate,
         times,
         _chooseBuilder(responseBuilder, bodyBuilder, body, code, headers),
+        delay,
       );
 
   /// Registers a new handler for a DELETE request.
@@ -191,19 +214,25 @@ class MockedServer {
   /// times, the next handler for the same url will be executed for the
   /// following request. If there are no more handlers a [EndOfTheInternetError]
   /// will be thrown.
-  void delete(String pathTemplate, {
+  ///
+  /// The response can be delayed either by delaying within the [BodyBuilder],
+  /// [ResponseBuilder] or by setting a [delay].
+  void delete(
+    String pathTemplate, {
     int code,
     Map<String, String> headers,
     dynamic body,
     BodyBuilder bodyBuilder,
     ResponseBuilder responseBuilder,
     int times,
+    Duration delay,
   }) =>
       _addHandler(
         "DELETE",
         pathTemplate,
         times,
         _chooseBuilder(responseBuilder, bodyBuilder, body, code, headers),
+        delay,
       );
 
   /// Registers a new handler for a HEAD request.
@@ -225,19 +254,25 @@ class MockedServer {
   /// times, the next handler for the same url will be executed for the
   /// following request. If there are no more handlers a [EndOfTheInternetError]
   /// will be thrown.
-  void head(String pathTemplate, {
+  ///
+  /// The response can be delayed either by delaying within the [BodyBuilder],
+  /// [ResponseBuilder] or by setting a [delay].
+  void head(
+    String pathTemplate, {
     int code,
     Map<String, String> headers,
     dynamic body,
     BodyBuilder bodyBuilder,
     ResponseBuilder responseBuilder,
     int times,
+    Duration delay,
   }) =>
       _addHandler(
         "HEAD",
         pathTemplate,
         times,
         _chooseBuilder(responseBuilder, bodyBuilder, body, code, headers),
+        delay,
       );
 
   /// Returns the next captured call.
@@ -276,7 +311,12 @@ class MockedServer {
   }
 
   void _addHandler(
-      String method, String pathTemplate, int times, ResponseBuilder builder) {
+    String method,
+    String pathTemplate,
+    int times,
+    ResponseBuilder builder,
+    Duration delay,
+  ) {
     var key = "$method $pathTemplate";
     if (!_handlers.containsKey(key)) {
       _handlers[key] = [];
@@ -289,7 +329,7 @@ class MockedServer {
     }
 
     _handlers[key].add(
-      _CallHandler(method, pathTemplate, builder, times),
+      _CallHandler(method, pathTemplate, builder, times, delay),
     );
   }
 
@@ -322,8 +362,8 @@ class MockedServer {
     }
   }
 
-  MockedResponse _buildResponse(int code, dynamic body,
-      Map<String, String> headers) {
+  MockedResponse _buildResponse(
+      int code, dynamic body, Map<String, String> headers) {
     if (body == null || body is String) {
       return MockedResponse(code, headers: headers, body: body);
     } else {

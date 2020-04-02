@@ -4,12 +4,16 @@ class _CallHandler {
   final String method;
   final UriParser _pathParser;
   final ResponseBuilder _buildResponse;
+  final Duration delay;
   int times;
 
-  _CallHandler(this.method,
-      String pathTemplate,
-      this._buildResponse,
-      this.times,) :this._pathParser = UriParser(UriTemplate("$pathTemplate"));
+  _CallHandler(
+    this.method,
+    String pathTemplate,
+    this._buildResponse,
+    this.times,
+    this.delay,
+  ) : this._pathParser = UriParser(UriTemplate("$pathTemplate"));
 
   Future<MockedResponse> _tryHandle(CapturedRequest request) async {
     if (times == null || times > 0) {
@@ -21,6 +25,11 @@ class _CallHandler {
             if (times != null) {
               times--;
             }
+
+            if (delay != null) {
+              await Future.delayed(delay);
+            }
+
             return _buildResponse(request);
           } on ParseException catch (_) {}
         }

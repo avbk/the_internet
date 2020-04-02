@@ -24,5 +24,19 @@ void main() {
       final response = await client.get("https://example.com/messages");
       expect(response.statusCode, 201);
     });
+
+    test("static message can be delayed", (server, client) async {
+      server.get("/messages", code: 400, delay: Duration(milliseconds: 100));
+
+      final before = DateTime.now();
+      await client.get("https://example.com/messages");
+      final after = DateTime.now();
+
+      final delta = 5;
+      var diff = after.difference(before).inMilliseconds;
+
+      expect(diff, greaterThan(100 - delta));
+      expect(diff, lessThan(100 + delta));
+    });
   });
 }
