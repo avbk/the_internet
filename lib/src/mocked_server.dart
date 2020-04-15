@@ -27,13 +27,28 @@ typedef ResponseBuilder = FutureOr<MockedResponse> Function(
 /// so that it responds to different http requests with reproducible
 /// [MockedResponse]s.
 class MockedServer {
-  final String _baseUrl;
+  final String _host;
+  final String _basePath;
   final Map<String, List<_CallHandler>> _handlers;
   final List<CapturedCall> _callQueue;
 
-  MockedServer._(this._baseUrl)
+  MockedServer._(String baseUrl)
       : _handlers = {},
-        _callQueue = [];
+        _callQueue = [],
+        _host = _hostFromBaseUrl(baseUrl),
+        _basePath = _basePathFromBaseUrl(baseUrl)
+  ;
+
+  static _hostFromBaseUrl(String baseUrl) {
+    String path = _basePathFromBaseUrl(baseUrl);
+    if (path.isEmpty)
+      return baseUrl;
+    else
+      return baseUrl.replaceFirst(path, "");
+  }
+
+  static _basePathFromBaseUrl(String baseUrl) => Uri.parse(baseUrl).path;
+
 
   /// Registers a new handler for a GET request.
   ///
@@ -345,7 +360,7 @@ class MockedServer {
     }
 
     _handlers[key].add(
-      _CallHandler(method, pathTemplate, builder, times, delay),
+      _CallHandler(method, _basePath + pathTemplate, builder, times, delay),
     );
   }
 
@@ -392,7 +407,7 @@ class MockedServer {
   }
 
   Future<MockedResponse> _tryHandle(CapturedRequest request) async {
-    if (request.uri.toString().startsWith(_baseUrl)) {
+    if (request.uri.toString().startsWith(_host)) {
       for (var handlers in _handlers.values) {
         for (var handler in handlers) {
           final MockedResponse response = await handler._tryHandle(request);

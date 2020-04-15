@@ -65,7 +65,7 @@ class TheInternet {
   String get humanReadableMatchers {
     String message = "";
     for (var server in _servers.values) {
-      message += "${server._baseUrl}\n";
+      message += "${server._host}\n";
       for (var methodAndPath in server._handlers.keys) {
         message += "\t${methodAndPath}\n";
       }

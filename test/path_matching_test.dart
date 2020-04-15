@@ -193,5 +193,33 @@ void main() {
       await client.get("https://example.com/messages/v2");
       expect(server.nextCapturedCall().request.uri.path, "/messages/v2");
     });
+
+    test("replacing a call works", (_, __) async {
+      TheInternet internet = TheInternet();
+      MockedServer server = internet.mockServer("https://example.com");
+      BaseClient client = internet.createHttpClient();
+
+      server.get("/messages");
+      final response1 = await client.get("https://example.com/messages");
+
+      server
+          ..remove("/messages")
+          ..get("/messages", code: 404);
+
+      final response2 = await client.get("https://example.com/messages");
+
+      expect(response1.statusCode, 200);
+      expect(response2.statusCode, 404);
+    });
+
+    test("using a basepath and not only a baseurl works", (_, __) async {
+      TheInternet internet = TheInternet();
+      MockedServer server = internet.mockServer("https://example.com/foobar");
+      BaseClient client = internet.createHttpClient();
+      server.get("/messages");
+
+      await client.get("https://example.com/foobar/messages");
+      expect(server.nextCapturedCall().request.uri.path, "/foobar/messages");
+    });
   });
 }
