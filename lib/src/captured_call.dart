@@ -1,29 +1,58 @@
 part of "../the_internet.dart";
 
+/// A call captured by [TheInternet].
+///
+/// Every request is logged with its corresponding mocked response for later
+/// verification.
 class CapturedCall {
+  /// The request, which has been received by [TheInternet] and was handled by
+  /// an installed handler.
   final CapturedRequest request;
+
+  /// The response, which has been created by an installed handler.
   final MockedResponse response;
 
-  CapturedCall(this.request, this.response);
+  CapturedCall._(this.request, this.response);
 }
 
+/// A captured request.
+///
+/// The request, which has been captured by [TheInternet].
 class CapturedRequest {
+  /// The headers are never null, but may be empty.
+  ///
+  /// _Note: the fact that Dio supports  multiple values per header
+  /// has not been targeted._
   final Map<String, String> headers;
+
+  /// The captured body or null if no body was provided (e.g. a GET request)
   final CapturedBody body;
+
+  /// The http verb, never null, always uppercase
   final String method;
-  final String url;
 
-  CapturedRequest.fromHttp(http.Request request)
-      : this.headers = request.headers,
-        this.method = request.method,
-        this.url = request.url.toString(),
-        this.body = CapturedBody.fromHttp(request);
+  /// The uri, never null
+  final Uri uri;
 
-  CapturedRequest.fromDio(dio.RequestOptions request)
+  /// All the args captured in the uri.
+  ///
+  /// The framework uses [UriParser] to match uris. If a uri matchers the
+  /// template of a handler, any arguments in the uri are put into this map.
+  Map<String, String> args;
+
+  CapturedRequest._fromHttp(http.Request request)
+      : this.headers = request.headers ?? {},
+        this.method = request.method.toUpperCase(),
+        this.uri = request.url,
+        this.body = CapturedBody._fromHttp(request),
+        this.args = {};
+
+  CapturedRequest._fromDio(dio.RequestOptions request)
       : this.headers = _convertHeaders(request.headers),
-        this.method = request.method,
-        this.url = request.uri.toString(),
-        this.body = CapturedBody.fromDio(request);
+        this.method = request.method.toUpperCase(),
+        this.uri = request.uri,
+        this.body = CapturedBody._fromDio(request),
+        this.args = {};
 
   static Map<String, String> _convertHeaders(Map<String, dynamic> headers) =>
       headers == null
@@ -36,14 +65,22 @@ class CapturedRequest {
             );
 }
 
+/// A captured body.
+///
+/// The body, which has been captured by [TheInternet].
 class CapturedBody {
-  final dynamic asString;
+  /// The raw body as [String], never null
+  final String asString;
+
+  /// The data in FormData format, if the client sent form-data, otherwise null
   final Map<String, String> asFormData;
+
+  /// The data decoded from JSON, if the client sent JSON, otherwise null
   final dynamic asJson;
 
   CapturedBody._(this.asString, this.asFormData, this.asJson);
 
-  factory CapturedBody.fromHttp(http.Request request) {
+  factory CapturedBody._fromHttp(http.Request request) {
     if (request.contentLength == 0) {
       return null;
     } else {
@@ -63,14 +100,14 @@ class CapturedBody {
     }
   }
 
-  factory CapturedBody.fromDio(dio.RequestOptions request) {
+  factory CapturedBody._fromDio(dio.RequestOptions request) {
     if (request.data is String) {
       return CapturedBody._(request.data, null, null);
     } else if (request.data is dio.FormData) {
       final formData = request.data as dio.FormData;
 
       return CapturedBody._(
-          formData.fields.map((e) => "${e.key}=${e.value}").join("&"),
+          dio.Transformer.urlEncodeMap(Map.fromEntries(formData.fields)),
           Map.fromEntries(formData.fields),
           null);
     } else if (request.data != null) {
@@ -80,34 +117,49 @@ class CapturedBody {
   }
 }
 
+/// A captured request.
+///
+/// The request, which has been captured by [TheInternet].
 class MockedResponse {
+
+  /// The status code to be delivered to the client, never null, defaults to `200`
   final int code;
+
+  /// The body to be delivered to the client, never null, defaults to `""`
   final String body;
+
+  /// The headers to be delivered to the client, never null, defaults to `{}`
   final Map<String, String> headers;
 
-  MockedResponse(
-    this.code, {
-    this.body = _kDefaultBody,
-    this.headers = _kDefaultHeaders,
-  });
+  /// Constructs an arbitrary mocked response.
+  MockedResponse(int code, {
+    String body = _kDefaultBody,
+    Map<String, String> headers = _kDefaultHeaders,
+  })
+      : this.code = code ?? _kDefaultCode,
+        this.headers = headers ?? _kDefaultHeaders,
+        this.body = body ?? _kDefaultBody;
 
-  MockedResponse.fromJson(
-    dynamic json, {
-    int code: _kDefaultCode,
-    Map<String, String> headers: _kDefaultHeaders,
+  /// Constructs a mocked JSON response.
+  ///
+  /// This means that the body is encoded as json and the headers are
+  /// extended by `Content-Type: application/json`
+  MockedResponse.fromJson(dynamic json, {
+    int code,
+    Map<String, String> headers,
   }) : this(
-          code,
-          body: jsonEncode(json),
-          headers: Map.of(headers)
-            ..addAll({"Content-Type": "application/json"}),
-        );
+    code,
+    body: jsonEncode(json),
+    headers: Map.of(headers ?? _kDefaultHeaders)
+      ..addAll({"Content-Type": "application/json"}),
+  );
 
-  http.Response toHttp() => http.Response(body, code, headers: headers);
+  http.Response _toHttp() => http.Response(body, code, headers: headers);
 
-  dio.ResponseBody toDio() =>
-      dio.ResponseBody.fromString(body, code, headers: _toDio(headers));
+  dio.ResponseBody _toDio() =>
+      dio.ResponseBody.fromString(body, code, headers: _toDioHeaders(headers));
 
-  Map<String, List<String>> _toDio(Map<String, String> headers) =>
+  Map<String, List<String>> _toDioHeaders(Map<String, String> headers) =>
       headers == null
           ? null
           : headers.map((key, value) => MapEntry(key.toLowerCase(), [value]));

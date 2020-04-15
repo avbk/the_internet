@@ -1,5 +1,4 @@
 import 'package:test/test.dart';
-import 'package:the_internet/the_internet.dart';
 
 import 'test_utils.dart';
 
@@ -7,7 +6,7 @@ void main() {
   multiClientTestGroup("PUT", (test) {
     test("respond with input data and check recorded call",
         configure: (server) => server.put("/messages",
-            body: (CapturedRequest request, _) =>
+            bodyBuilder: (request) =>
                 {"newMessage": "message ${request.body.asFormData["title"]}"}),
         request: {
           "path": "/messages",
