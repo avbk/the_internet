@@ -221,5 +221,14 @@ void main() {
       await client.get("https://example.com/foobar/messages");
       expect(server.nextCapturedCall().request.uri.path, "/foobar/messages");
     });
+    test("using a basepath, which is also part of the host, works", (_, __) async {
+      TheInternet internet = TheInternet();
+      MockedServer server = internet.mockServer("https://foobar.com/foobar");
+      BaseClient client = internet.createHttpClient();
+      server.get("/messages");
+
+      await client.get("https://foobar.com/foobar/messages");
+      expect(server.nextCapturedCall().request.uri.path, "/foobar/messages");
+    });
   });
 }

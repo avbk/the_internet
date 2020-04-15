@@ -39,13 +39,7 @@ class MockedServer {
         _basePath = _basePathFromBaseUrl(baseUrl)
   ;
 
-  static _hostFromBaseUrl(String baseUrl) {
-    String path = _basePathFromBaseUrl(baseUrl);
-    if (path.isEmpty)
-      return baseUrl;
-    else
-      return baseUrl.replaceFirst(path, "");
-  }
+  static _hostFromBaseUrl(String baseUrl) => Uri.parse(baseUrl).origin;
 
   static _basePathFromBaseUrl(String baseUrl) => Uri.parse(baseUrl).path;
 
