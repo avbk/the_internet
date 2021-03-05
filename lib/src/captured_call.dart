@@ -19,7 +19,7 @@ class CapturedCall {
 ///
 /// The request, which has been captured by [TheInternet].
 class CapturedRequest {
-  /// The headers are never null, but may be empty.
+  /// The captured headers, may be empty.
   ///
   /// _Note: the fact that Dio supports  multiple values per header
   /// has not been targeted._
@@ -28,16 +28,20 @@ class CapturedRequest {
   /// The captured body or null if no body was provided (e.g. a GET request)
   final CapturedBody? body;
 
-  /// The http verb, never null, always uppercase
+  /// The http verb of the captured request, always uppercase
   final String method;
 
-  /// The uri, never null
+  /// The full uri of the captured request
   final Uri uri;
 
-  /// All the args captured in the uri.
+  /// All uri arguments captured while parsing the uri.
   ///
-  /// The framework uses [UriParser] to match uris. If a uri matchers the
-  /// template of a handler, any arguments in the uri are put into this map.
+  /// The framework uses [UriParser] to match uris. If an uri matches the
+  /// template of a handler, any argument in the uri is added to this map.
+  ///
+  /// See
+  /// [pub.dev/packages/uri#uriparser](https://pub.dev/packages/uri#uriparser)
+  /// for more info.
   Map<String, String> args;
 
   CapturedRequest._fromHttp(http.Request request)
@@ -65,7 +69,7 @@ class CapturedRequest {
 ///
 /// The body, which has been captured by [TheInternet].
 class CapturedBody {
-  /// The raw body as [String], never null
+  /// The raw body as [String]
   final String asString;
 
   /// The data in FormData format, if the client sent form-data, otherwise null
@@ -118,13 +122,13 @@ class CapturedBody {
 ///
 /// The request, which has been captured by [TheInternet].
 class MockedResponse {
-  /// The status code to be delivered to the client, never null, defaults to `200`
+  /// The status code to be delivered to the client, defaults to `200`
   final int code;
 
-  /// The body to be delivered to the client, never null, defaults to `""`
+  /// The body to be delivered to the client, defaults to `""`
   final String body;
 
-  /// The headers to be delivered to the client, never null, defaults to `{}`
+  /// The headers to be delivered to the client, defaults to `{}`
   final Map<String, String> headers;
 
   /// Constructs an arbitrary mocked response.
@@ -157,5 +161,8 @@ class MockedResponse {
       dio.ResponseBody.fromString(body, code, headers: _toDioHeaders(headers));
 
   Map<String, List<String>> _toDioHeaders(Map<String, String> headers) =>
-      headers.map((key, value) => MapEntry(key.toLowerCase(), [value]));
+      headers.map((key, value) => MapEntry(
+            key.toLowerCase(),
+            [value],
+          ));
 }

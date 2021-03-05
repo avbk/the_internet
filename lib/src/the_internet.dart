@@ -7,11 +7,11 @@ const _kDefaultHeaders = <String, String>{};
 /// [TheInternet] replaces the real internet with a local mocked and controlled
 /// version.
 ///
-/// Use [mockServer] to create a [MockedServer], which itself can be configured:
+/// Use [mockServer] to create a [MockedServer], which then can be configured:
 /// ```dart
 ///   TheInternet internet = TheInternet();
 ///   MockedServer backend = internet.mockServer("https://backend.com/api");
-///   backend.get("/todo/{id}", code: 404, body: {"error: "Unknown Todo"});
+///   backend.get("/task/{id}", code: 404, body: {"error: "Unknown Task"});
 /// ```
 ///
 /// [TheInternet] supports mocking the real internet for [http] as well as
@@ -23,19 +23,19 @@ const _kDefaultHeaders = <String, String>{};
 ///
 /// ```dart
 /// BaseClient client = internet.createHttpClient();
-/// Response response = await client.get("/todo/14");
+/// Response response = await client.get("/task/14");
 ///
 /// expect(response.statusCode, 404);
 /// ```
 class TheInternet {
   final Map<String, MockedServer> _servers;
 
-  /// Creates a instance of [TheInternet]
+  /// Creates an instance of [TheInternet]
   ///
   /// Usually only one instance is needed, but it is possible to have multiple
-  /// [TheInternet]s at the same time. Note that the clients created in one
-  /// won't be able to access [MockedServer]s of the other [TheInternet]
-  /// instance.
+  /// [TheInternet]s at the same time. Note that dio/http clients created in one
+  /// won't be able to access [MockedServer]s of other [TheInternet]
+  /// instances.
   TheInternet() : _servers = {};
 
   /// Creates a mocked version of the [BaseClient] that only
@@ -45,7 +45,7 @@ class TheInternet {
   /// Creates a mocked version of the [HttpClientAdapter] that only
   /// communicates with [TheInternet].
   ///
-  /// This adapter needs to be assigned to the [httpClientAdapter] Property of
+  /// This adapter needs to be assigned to the [HttpClientAdapter] Property of
   /// the [Dio] instance.
   dio.HttpClientAdapter createDioAdapter() => _MockDioAdapter(this);
 
@@ -75,7 +75,7 @@ class TheInternet {
 
   /// Resets [TheInternet].
   ///
-  /// It will also reset all the registered [MockedServer]s  before dropping
+  /// It will also reset all the registered [MockedServer]s before dropping
   /// them afterwards.
   void reset() {
     for (var server in _servers.values) {
@@ -111,7 +111,7 @@ class TheInternet {
 /// This Error is thrown whenever a request is received which cannot be
 /// handled by [TheInternet].
 ///
-/// The [CapturedRequest] and [TheInternet] are provided with this this error
+/// The [CapturedRequest] and [TheInternet] are provided with this error
 /// for further investigation.
 class EndOfTheInternetError implements Exception {
   final TheInternet internet;
