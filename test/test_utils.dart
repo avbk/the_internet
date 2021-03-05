@@ -5,12 +5,14 @@ import 'package:http/http.dart' as http;
 import 'package:test/test.dart';
 import 'package:the_internet/the_internet.dart';
 
+extension StringToUri on String {
+  Uri get asUri => Uri.parse(this);
+}
 
-Future expectNoHandler(Function call) =>
-  expectLater(
-        call,
-    throwsA(isA<EndOfTheInternetError>()),
-  );
+Future expectNoHandler(Function call) => expectLater(
+      call,
+      throwsA(isA<EndOfTheInternetError>()),
+    );
 
 typedef HttpClientTestCallback = Function(
     MockedServer server, http.BaseClient client);
@@ -75,11 +77,11 @@ typedef MultiClientTest = Function(
 typedef MultiClientTestGroup = Function(MultiClientTest test);
 
 typedef _simpleHttpRequest = Future<http.Response> Function(
-  String url, {
+  Uri uri, {
   Map<String, String> headers,
 });
 typedef _bodyHttpRequest = Future<http.Response> Function(
-  String url, {
+  Uri uri, {
   Map<String, String> headers,
   dynamic body,
   Encoding encoding,
@@ -131,13 +133,13 @@ void multiClientTestGroup(String method, MultiClientTestGroup innerGroup) {
           urlWithQueryParams += "?";
           urlWithQueryParams += dio.Transformer.urlEncodeMap(request["query"]);
         }
-        return call(urlWithQueryParams, headers: request["headers"]);
+        return call(urlWithQueryParams.asUri, headers: request["headers"]);
       }
 
       Future<http.Response> executeBodyHttpCall(_bodyHttpRequest call) {
         if (request["formData"] != null)
           return call(
-            url,
+            url.asUri,
             headers: request["headers"],
             body: request["formData"],
           );
@@ -146,13 +148,13 @@ void multiClientTestGroup(String method, MultiClientTestGroup innerGroup) {
           if (headers != null) headers["Content-Type"] = "application/json";
 
           return call(
-            url,
+            url.asUri,
             headers: headers,
             body: jsonEncode(request["json"]),
           );
         } else {
           return call(
-            url,
+            url.asUri,
             headers: request["headers"],
             body: request["body"],
           );
@@ -194,7 +196,7 @@ void multiClientTestGroup(String method, MultiClientTestGroup innerGroup) {
 
       Future<dio.Response> executeBodyDioCall(_bodyDioRequest call) =>
           executeSimpleBodyDioCall((path,
-              {cancelToken, data, options, queryParameters}) =>
+                  {cancelToken, data, options, queryParameters}) =>
               call(path, data: data, options: options));
 
       void verifyRecordedCall() {

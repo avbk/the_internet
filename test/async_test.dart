@@ -11,7 +11,7 @@ void main() {
         return {"status": "okay"};
       });
 
-      final response = await client.get("https://example.com/messages");
+      final response = await client.get("https://example.com/messages".asUri);
       expect(response.body, '{"status":"okay"}');
     });
 
@@ -21,7 +21,7 @@ void main() {
         return MockedResponse(201);
       });
 
-      final response = await client.get("https://example.com/messages");
+      final response = await client.get("https://example.com/messages".asUri);
       expect(response.statusCode, 201);
     });
 
@@ -29,7 +29,7 @@ void main() {
       server.get("/messages", code: 400, delay: Duration(milliseconds: 100));
 
       final before = DateTime.now();
-      await client.get("https://example.com/messages");
+      await client.get("https://example.com/messages".asUri);
       final after = DateTime.now();
 
       final delta = 5;

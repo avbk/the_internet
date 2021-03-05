@@ -36,13 +36,13 @@ class MockedServer {
       : _handlers = {},
         _callQueue = [],
         _host = _hostFromBaseUrl(baseUrl),
-        _basePath = _basePathFromBaseUrl(baseUrl)
-  ;
+        _basePath = _basePathFromBaseUrl(baseUrl);
 
-  static _hostFromBaseUrl(String baseUrl) => Uri.parse(baseUrl).origin;
+  static _hostFromBaseUrl(String baseUrl) => baseUrl.startsWith("http")
+      ? Uri.parse(baseUrl).origin
+      : Uri.parse("http://$baseUrl").origin;
 
   static _basePathFromBaseUrl(String baseUrl) => Uri.parse(baseUrl).path;
-
 
   /// Registers a new handler for a GET request.
   ///

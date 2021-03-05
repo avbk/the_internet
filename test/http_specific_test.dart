@@ -15,7 +15,7 @@ void main() {
       server.post("/messages", code: 204);
 
       await client.post(
-        "https://example.com/messages",
+        "https://example.com/messages".asUri,
         body: {"title": "Hello"},
       );
 
@@ -31,7 +31,7 @@ void main() {
       server.post("/messages", code: 204);
 
       final response = await client.post(
-        "https://example.com/messages",
+        "https://example.com/messages".asUri,
         body: {"title": "Hello"},
       );
 
@@ -61,7 +61,7 @@ void main() {
     test("json can be inspected afterwards", (server, client) async {
       server.post("/messages", code: 204);
 
-      await client.post("https://example.com/messages",
+      await client.post("https://example.com/messages".asUri,
           body: jsonEncode({"title": "Hello"}),
           headers: {"Content-Type": "application/json"});
 
