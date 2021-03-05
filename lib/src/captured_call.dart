@@ -55,12 +55,10 @@ class CapturedRequest {
         this.args = {};
 
   static Map<String, String> _convertHeaders(Map<String, dynamic> headers) =>
-      Map.fromEntries(
-        headers.entries.map((entry) => MapEntry<String, String>(
-              entry.key,
-              entry.value.toString(),
-            )),
-      );
+      headers.map((key, value) => MapEntry(
+            key,
+            value.toString(),
+          ));
 }
 
 /// A captured body.
