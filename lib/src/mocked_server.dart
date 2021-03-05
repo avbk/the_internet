@@ -8,7 +8,7 @@ part of "../the_internet.dart";
 ///
 /// The provided [CapturedRequest] can be used to access path and
 /// query arguments as well as headers.
-typedef BodyBuilder = FutureOr<dynamic> Function(
+typedef BodyBuilder = FutureOr<Object> Function(
   CapturedRequest request,
 );
 
@@ -70,7 +70,7 @@ class MockedServer {
     String pathTemplate, {
     int? code,
     Map<String, String>? headers,
-    dynamic body,
+    Object? body,
     BodyBuilder? bodyBuilder,
     ResponseBuilder? responseBuilder,
     int? times,
@@ -110,7 +110,7 @@ class MockedServer {
     String pathTemplate, {
     int? code,
     Map<String, String>? headers,
-    dynamic body,
+    Object? body,
     BodyBuilder? bodyBuilder,
     ResponseBuilder? responseBuilder,
     int? times,
@@ -150,7 +150,7 @@ class MockedServer {
     String pathTemplate, {
     int? code,
     Map<String, String>? headers,
-    dynamic body,
+    Object? body,
     BodyBuilder? bodyBuilder,
     ResponseBuilder? responseBuilder,
     int? times,
@@ -190,7 +190,7 @@ class MockedServer {
     String pathTemplate, {
     int? code,
     Map<String, String>? headers,
-    dynamic body,
+    Object? body,
     BodyBuilder? bodyBuilder,
     ResponseBuilder? responseBuilder,
     int? times,
@@ -230,7 +230,7 @@ class MockedServer {
     String pathTemplate, {
     int? code,
     Map<String, String>? headers,
-    dynamic body,
+    Object? body,
     BodyBuilder? bodyBuilder,
     ResponseBuilder? responseBuilder,
     int? times,
@@ -270,7 +270,7 @@ class MockedServer {
     String pathTemplate, {
     int? code,
     Map<String, String>? headers,
-    dynamic body,
+    Object? body,
     BodyBuilder? bodyBuilder,
     ResponseBuilder? responseBuilder,
     int? times,
@@ -363,7 +363,7 @@ class MockedServer {
   ResponseBuilder _chooseBuilder(
     ResponseBuilder? responseBuilder,
     BodyBuilder? bodyBuilder,
-    dynamic body,
+    Object? body,
     int? code,
     Map<String, String>? headers,
   ) {
@@ -372,7 +372,7 @@ class MockedServer {
     final hasStatics = body != null || code != null || headers != null;
 
     final hasBadArguments = [hasBodyBuilder, hasResponseBuilder, hasStatics]
-            .fold(0, (dynamic sum, x) => sum + (x ? 1 : 0)) >
+            .fold(0, (int sum, x) => sum + (x ? 1 : 0)) >
         1;
 
     if (hasBadArguments)
@@ -390,14 +390,18 @@ class MockedServer {
   }
 
   MockedResponse _buildResponse(
-      int? code, dynamic body, Map<String, String>? headers) {
+      int? code, Object? body, Map<String, String>? headers) {
     if (body == null || body is String) {
-      return MockedResponse(code, headers: headers, body: body);
+      return MockedResponse(
+        code ?? _kDefaultCode,
+        headers: headers ?? _kDefaultHeaders,
+        body: body?.toString() ?? _kDefaultBody,
+      );
     } else {
       return MockedResponse.fromJson(
         body,
-        code: code,
-        headers: headers,
+        code: code ?? _kDefaultCode,
+        headers: headers ?? _kDefaultHeaders,
       );
     }
   }

@@ -130,7 +130,7 @@ void main() {
       "Query Parameters are supported",
       configure: (server) {
         server.get("/messages{?filter}",
-            bodyBuilder: (request) => request.args["filter"]);
+            bodyBuilder: (request) => request.args["filter"] ?? "");
       },
       request: {
         "path": "/messages",

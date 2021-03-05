@@ -129,12 +129,12 @@ class MockedResponse {
 
   /// Constructs an arbitrary mocked response.
   MockedResponse(
-    int? code, {
-    String? body = _kDefaultBody,
-    Map<String, String>? headers = _kDefaultHeaders,
-  })  : this.code = code ?? _kDefaultCode,
-        this.headers = headers ?? _kDefaultHeaders,
-        this.body = body ?? _kDefaultBody;
+    int code, {
+    String body = _kDefaultBody,
+    Map<String, String> headers = _kDefaultHeaders,
+  })  : this.code = code,
+        this.headers = headers,
+        this.body = body;
 
   /// Constructs a mocked JSON response.
   ///
@@ -142,12 +142,12 @@ class MockedResponse {
   /// extended by `Content-Type: application/json`
   MockedResponse.fromJson(
     dynamic json, {
-    int? code,
-    Map<String, String>? headers,
+    int code = _kDefaultCode,
+    Map<String, String> headers = _kDefaultHeaders,
   }) : this(
           code,
           body: jsonEncode(json),
-          headers: Map.of(headers ?? _kDefaultHeaders)
+          headers: Map.of(headers)
             ..addAll({"Content-Type": "application/json"}),
         );
 
