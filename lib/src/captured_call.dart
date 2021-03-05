@@ -41,7 +41,7 @@ class CapturedRequest {
   Map<String, String> args;
 
   CapturedRequest._fromHttp(http.Request request)
-      : this.headers = request.headers ?? {},
+      : this.headers = request.headers,
         this.method = request.method.toUpperCase(),
         this.uri = request.url,
         this.body = CapturedBody._fromHttp(request),
@@ -55,14 +55,12 @@ class CapturedRequest {
         this.args = {};
 
   static Map<String, String> _convertHeaders(Map<String, dynamic> headers) =>
-      headers == null
-          ? {}
-          : Map.fromEntries(
-              headers.entries.map((entry) => MapEntry<String, String>(
-                    entry.key,
-                    entry.value.toString(),
-                  )),
-            );
+      Map.fromEntries(
+        headers.entries.map((entry) => MapEntry<String, String>(
+              entry.key,
+              entry.value.toString(),
+            )),
+      );
 }
 
 /// A captured body.
@@ -73,7 +71,7 @@ class CapturedBody {
   final String asString;
 
   /// The data in FormData format, if the client sent form-data, otherwise null
-  final Map<String, String> asFormData;
+  final Map<String, String>? asFormData;
 
   /// The data decoded from JSON, if the client sent JSON, otherwise null
   final dynamic asJson;
@@ -82,11 +80,11 @@ class CapturedBody {
 
   factory CapturedBody._fromHttp(http.Request request) {
     if (request.contentLength == 0) {
-      return null;
+      return CapturedBody._("", null, null);
     } else {
       String body = request.body;
 
-      Map<String, String> formData;
+      Map<String, String>? formData;
       try {
         formData = request.bodyFields;
       } catch (ignored) {}
@@ -113,7 +111,7 @@ class CapturedBody {
     } else if (request.data != null) {
       return CapturedBody._(jsonEncode(request.data), null, request.data);
     } else
-      return null;
+      return CapturedBody._("", null, null);
   }
 }
 
@@ -121,7 +119,6 @@ class CapturedBody {
 ///
 /// The request, which has been captured by [TheInternet].
 class MockedResponse {
-
   /// The status code to be delivered to the client, never null, defaults to `200`
   final int code;
 
@@ -132,11 +129,11 @@ class MockedResponse {
   final Map<String, String> headers;
 
   /// Constructs an arbitrary mocked response.
-  MockedResponse(int code, {
-    String body = _kDefaultBody,
-    Map<String, String> headers = _kDefaultHeaders,
-  })
-      : this.code = code ?? _kDefaultCode,
+  MockedResponse(
+    int? code, {
+    String? body = _kDefaultBody,
+    Map<String, String>? headers = _kDefaultHeaders,
+  })  : this.code = code ?? _kDefaultCode,
         this.headers = headers ?? _kDefaultHeaders,
         this.body = body ?? _kDefaultBody;
 
@@ -144,15 +141,16 @@ class MockedResponse {
   ///
   /// This means that the body is encoded as json and the headers are
   /// extended by `Content-Type: application/json`
-  MockedResponse.fromJson(dynamic json, {
-    int code,
-    Map<String, String> headers,
+  MockedResponse.fromJson(
+    dynamic json, {
+    int? code,
+    Map<String, String>? headers,
   }) : this(
-    code,
-    body: jsonEncode(json),
-    headers: Map.of(headers ?? _kDefaultHeaders)
-      ..addAll({"Content-Type": "application/json"}),
-  );
+          code,
+          body: jsonEncode(json),
+          headers: Map.of(headers ?? _kDefaultHeaders)
+            ..addAll({"Content-Type": "application/json"}),
+        );
 
   http.Response _toHttp() => http.Response(body, code, headers: headers);
 
@@ -160,7 +158,5 @@ class MockedResponse {
       dio.ResponseBody.fromString(body, code, headers: _toDioHeaders(headers));
 
   Map<String, List<String>> _toDioHeaders(Map<String, String> headers) =>
-      headers == null
-          ? null
-          : headers.map((key, value) => MapEntry(key.toLowerCase(), [value]));
+      headers.map((key, value) => MapEntry(key.toLowerCase(), [value]));
 }

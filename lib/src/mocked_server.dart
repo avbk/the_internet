@@ -68,13 +68,13 @@ class MockedServer {
   /// [ResponseBuilder] or by setting a [delay].
   void get(
     String pathTemplate, {
-    int code,
-    Map<String, String> headers,
+    int? code,
+    Map<String, String>? headers,
     dynamic body,
-    BodyBuilder bodyBuilder,
-    ResponseBuilder responseBuilder,
-    int times,
-    Duration delay,
+    BodyBuilder? bodyBuilder,
+    ResponseBuilder? responseBuilder,
+    int? times,
+    Duration? delay,
   }) =>
       _addHandler(
         "GET",
@@ -108,13 +108,13 @@ class MockedServer {
   /// [ResponseBuilder] or by setting a [delay].
   void post(
     String pathTemplate, {
-    int code,
-    Map<String, String> headers,
+    int? code,
+    Map<String, String>? headers,
     dynamic body,
-    BodyBuilder bodyBuilder,
-    ResponseBuilder responseBuilder,
-    int times,
-    Duration delay,
+    BodyBuilder? bodyBuilder,
+    ResponseBuilder? responseBuilder,
+    int? times,
+    Duration? delay,
   }) =>
       _addHandler(
         "POST",
@@ -148,13 +148,13 @@ class MockedServer {
   /// [ResponseBuilder] or by setting a [delay].
   void put(
     String pathTemplate, {
-    int code,
-    Map<String, String> headers,
+    int? code,
+    Map<String, String>? headers,
     dynamic body,
-    BodyBuilder bodyBuilder,
-    ResponseBuilder responseBuilder,
-    int times,
-    Duration delay,
+    BodyBuilder? bodyBuilder,
+    ResponseBuilder? responseBuilder,
+    int? times,
+    Duration? delay,
   }) =>
       _addHandler(
         "PUT",
@@ -188,13 +188,13 @@ class MockedServer {
   /// [ResponseBuilder] or by setting a [delay].
   void patch(
     String pathTemplate, {
-    int code,
-    Map<String, String> headers,
+    int? code,
+    Map<String, String>? headers,
     dynamic body,
-    BodyBuilder bodyBuilder,
-    ResponseBuilder responseBuilder,
-    int times,
-    Duration delay,
+    BodyBuilder? bodyBuilder,
+    ResponseBuilder? responseBuilder,
+    int? times,
+    Duration? delay,
   }) =>
       _addHandler(
         "PATCH",
@@ -228,13 +228,13 @@ class MockedServer {
   /// [ResponseBuilder] or by setting a [delay].
   void delete(
     String pathTemplate, {
-    int code,
-    Map<String, String> headers,
+    int? code,
+    Map<String, String>? headers,
     dynamic body,
-    BodyBuilder bodyBuilder,
-    ResponseBuilder responseBuilder,
-    int times,
-    Duration delay,
+    BodyBuilder? bodyBuilder,
+    ResponseBuilder? responseBuilder,
+    int? times,
+    Duration? delay,
   }) =>
       _addHandler(
         "DELETE",
@@ -268,13 +268,13 @@ class MockedServer {
   /// [ResponseBuilder] or by setting a [delay].
   void head(
     String pathTemplate, {
-    int code,
-    Map<String, String> headers,
+    int? code,
+    Map<String, String>? headers,
     dynamic body,
-    BodyBuilder bodyBuilder,
-    ResponseBuilder responseBuilder,
-    int times,
-    Duration delay,
+    BodyBuilder? bodyBuilder,
+    ResponseBuilder? responseBuilder,
+    int? times,
+    Duration? delay,
   }) =>
       _addHandler(
         "HEAD",
@@ -302,7 +302,7 @@ class MockedServer {
   ///
   /// As many capturedCalls as given by the argument count are omitted.
   void omitCapturedCall({int count: 1}) {
-    if (count == null || count <= 0) {
+    if (count <= 0) {
       throw ArgumentError("count must be a positive number");
     }
     for (var i = 0; i < count; i++) {
@@ -324,7 +324,7 @@ class MockedServer {
   /// If only [pathTemplate] is provided all handlers for every supported
   /// http method are removed. Otherwise only handlers for the given method
   /// are removed.
-  void remove(String pathTemplate, {String method}) {
+  void remove(String pathTemplate, {String? method}) {
     final methods = (method == null)
         ? ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD"]
         : [method.toUpperCase()];
@@ -338,39 +338,41 @@ class MockedServer {
   void _addHandler(
     String method,
     String pathTemplate,
-    int times,
+    int? times,
     ResponseBuilder builder,
-    Duration delay,
+    Duration? delay,
   ) {
-    var key = "$method $pathTemplate";
+    final key = "$method $pathTemplate";
+
+    final List<_CallHandler> handlers = _handlers[key] ?? [];
     if (!_handlers.containsKey(key)) {
-      _handlers[key] = [];
+      _handlers[key] = handlers;
     } else {
-      for (var handler in _handlers[key]) {
+      for (var handler in handlers) {
         if (handler.times == null)
           throw StateError(
               "There can only be one infinite handler. Did you forget to specify the times argument before?");
       }
     }
 
-    _handlers[key].add(
+    handlers.add(
       _CallHandler(method, _basePath + pathTemplate, builder, times, delay),
     );
   }
 
   ResponseBuilder _chooseBuilder(
-    ResponseBuilder responseBuilder,
-    BodyBuilder bodyBuilder,
+    ResponseBuilder? responseBuilder,
+    BodyBuilder? bodyBuilder,
     dynamic body,
-    int code,
-    Map<String, String> headers,
+    int? code,
+    Map<String, String>? headers,
   ) {
     final hasBodyBuilder = bodyBuilder != null;
     final hasResponseBuilder = responseBuilder != null;
     final hasStatics = body != null || code != null || headers != null;
 
     final hasBadArguments = [hasBodyBuilder, hasResponseBuilder, hasStatics]
-            .fold(0, (sum, x) => sum + (x ? 1 : 0)) >
+            .fold(0, (dynamic sum, x) => sum + (x ? 1 : 0)) >
         1;
 
     if (hasBadArguments)
@@ -388,7 +390,7 @@ class MockedServer {
   }
 
   MockedResponse _buildResponse(
-      int code, dynamic body, Map<String, String> headers) {
+      int? code, dynamic body, Map<String, String>? headers) {
     if (body == null || body is String) {
       return MockedResponse(code, headers: headers, body: body);
     } else {
@@ -400,11 +402,11 @@ class MockedServer {
     }
   }
 
-  Future<MockedResponse> _tryHandle(CapturedRequest request) async {
+  Future<MockedResponse?> _tryHandle(CapturedRequest request) async {
     if (request.uri.toString().startsWith(_host)) {
       for (var handlers in _handlers.values) {
         for (var handler in handlers) {
-          final MockedResponse response = await handler._tryHandle(request);
+          final MockedResponse? response = await handler._tryHandle(request);
           if (response != null) {
             _callQueue.add(CapturedCall._(request, response));
             return response;

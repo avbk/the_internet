@@ -4,8 +4,8 @@ class _CallHandler {
   final String method;
   final UriParser _pathParser;
   final ResponseBuilder _buildResponse;
-  final Duration delay;
-  int times;
+  final Duration? delay;
+  int? times;
 
   _CallHandler(
     this.method,
@@ -15,20 +15,15 @@ class _CallHandler {
     this.delay,
   ) : this._pathParser = UriParser(UriTemplate("$pathTemplate"));
 
-  Future<MockedResponse> _tryHandle(CapturedRequest request) async {
-    if (times == null || times > 0) {
+  Future<MockedResponse?> _tryHandle(CapturedRequest request) async {
+    if (_canTick) {
       if (request.method.toUpperCase() == method.toUpperCase()) {
         if (_pathParser.matches(request.uri)) {
           try {
             request.args = _pathParser.parse(request.uri);
 
-            if (times != null) {
-              times--;
-            }
-
-            if (delay != null) {
-              await Future.delayed(delay);
-            }
+            _tick();
+            await _throttle();
 
             return _buildResponse(request);
           } on ParseException catch (_) {}
@@ -37,5 +32,21 @@ class _CallHandler {
     }
 
     return null;
+  }
+
+  bool get _canTick => (times ?? 1) > 0;
+
+  void _tick() {
+    final times = this.times;
+    if (times != null) {
+      this.times = times - 1;
+    }
+  }
+
+  Future<void> _throttle() async {
+    final delay = this.delay;
+    if (delay != null) {
+      await Future.delayed(delay);
+    }
   }
 }

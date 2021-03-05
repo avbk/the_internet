@@ -57,7 +57,7 @@ class TheInternet {
     if (!_servers.containsKey(baseUrl)) {
       _servers[baseUrl] = MockedServer._(baseUrl);
     }
-    return _servers[baseUrl];
+    return _servers[baseUrl]!;
   }
 
   /// Get a human readable summary about all the [MockedServer]s and the
@@ -87,18 +87,18 @@ class TheInternet {
   Future<http.Response> _handleHttpRequest(http.Request request) async {
     final CapturedRequest req = CapturedRequest._fromHttp(request);
     final MockedResponse response = await _handleCapturedRequest(req);
-    return response?._toHttp();
+    return response._toHttp();
   }
 
   Future<dio.ResponseBody> _handleDioRequest(dio.RequestOptions request) async {
     final CapturedRequest req = CapturedRequest._fromDio(request);
     final MockedResponse response = await _handleCapturedRequest(req);
-    return response?._toDio();
+    return response._toDio();
   }
 
   Future<MockedResponse> _handleCapturedRequest(CapturedRequest request) async {
     for (var server in _servers.values) {
-      final MockedResponse response = await server._tryHandle(request);
+      final MockedResponse? response = await server._tryHandle(request);
       if (response != null) {
         return response;
       }
@@ -139,7 +139,7 @@ class _MockDioAdapter extends dio.HttpClientAdapter {
 
   @override
   Future<dio.ResponseBody> fetch(dio.RequestOptions options,
-      Stream<List<int>> requestStream, Future cancelFuture) {
+      Stream<List<int>> requestStream, Future? cancelFuture) {
     return _internet._handleDioRequest(options);
   }
 
