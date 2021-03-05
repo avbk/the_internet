@@ -213,11 +213,11 @@ void multiClientTestGroup(String method, MultiClientTestGroup innerGroup) {
           if (recorded["request"] != null) {
             expect(recordedCall.request.uri,
                 Uri.parse(recorded["request"]["url"]));
-            expect(recordedCall.request.body.asString,
+            expect(recordedCall.request.body?.asString,
                 recorded["request"]["bodyAsString"]);
-            expect(recordedCall.request.body.asFormData,
+            expect(recordedCall.request.body?.asFormData,
                 recorded["request"]["bodyAsFormData"]);
-            expect(recordedCall.request.body.asJson,
+            expect(recordedCall.request.body?.asJson,
                 recorded["request"]["bodyAsJson"]);
 
             // only check extra headers (not content type or alike)

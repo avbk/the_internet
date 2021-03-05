@@ -55,8 +55,9 @@ void main() {
 
     test("respond with input data",
         configure: (server) => server.post("/messages",
-            bodyBuilder: (request) =>
-                {"newMessage": "message ${request.body.asFormData?["title"]}"}),
+            bodyBuilder: (request) => {
+                  "newMessage": "message ${request.body?.asFormData?["title"]}"
+                }),
         request: {
           "path": "/messages",
           "formData": {"title": "Hello"}

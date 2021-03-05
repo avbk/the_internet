@@ -6,8 +6,9 @@ void main() {
   multiClientTestGroup("PUT", (test) {
     test("respond with input data and check recorded call",
         configure: (server) => server.put("/messages",
-            bodyBuilder: (request) =>
-                {"newMessage": "message ${request.body.asFormData?["title"]}"}),
+            bodyBuilder: (request) => {
+                  "newMessage": "message ${request.body?.asFormData?["title"]}"
+                }),
         request: {
           "path": "/messages",
           "formData": {"title": "Hello"}

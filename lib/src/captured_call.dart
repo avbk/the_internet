@@ -26,7 +26,7 @@ class CapturedRequest {
   final Map<String, String> headers;
 
   /// The captured body or null if no body was provided (e.g. a GET request)
-  final CapturedBody body;
+  final CapturedBody? body;
 
   /// The http verb, never null, always uppercase
   final String method;
@@ -78,9 +78,9 @@ class CapturedBody {
 
   CapturedBody._(this.asString, this.asFormData, this.asJson);
 
-  factory CapturedBody._fromHttp(http.Request request) {
+  static CapturedBody? _fromHttp(http.Request request) {
     if (request.contentLength == 0) {
-      return CapturedBody._("", null, null);
+      return null;
     } else {
       String body = request.body;
 
@@ -98,7 +98,7 @@ class CapturedBody {
     }
   }
 
-  factory CapturedBody._fromDio(dio.RequestOptions request) {
+  static CapturedBody? _fromDio(dio.RequestOptions request) {
     if (request.data is String) {
       return CapturedBody._(request.data, null, null);
     } else if (request.data is dio.FormData) {
@@ -110,8 +110,9 @@ class CapturedBody {
           null);
     } else if (request.data != null) {
       return CapturedBody._(jsonEncode(request.data), null, request.data);
-    } else
-      return CapturedBody._("", null, null);
+    } else {
+      return null;
+    }
   }
 }
 
