@@ -22,9 +22,9 @@ typedef HttpClientTestGroup = Function(HttpClientTest test);
 
 void httpClientTestGroup(HttpClientTestGroup innerGroup) {
   group("HttpClient", () {
-    TheInternet internet;
-    MockedServer server;
-    http.BaseClient client;
+    late TheInternet internet;
+    late MockedServer server;
+    late http.BaseClient client;
 
     setUp(() {
       internet = TheInternet();
@@ -47,9 +47,9 @@ typedef DioClientTestGroup = Function(DioClientTest test);
 
 void dioClientTestGroup(DioClientTestGroup innerGroup) {
   group("Dio", () {
-    TheInternet internet;
-    MockedServer server;
-    dio.Dio dioClient;
+    late TheInternet internet;
+    late MockedServer server;
+    late dio.Dio dioClient;
 
     setUp(() {
       internet = TheInternet();
@@ -69,63 +69,63 @@ void dioClientTestGroup(DioClientTestGroup innerGroup) {
 typedef MultiClientConfigCallback = Function(MockedServer server);
 typedef MultiClientTest = Function(
   String description, {
-  MultiClientConfigCallback configure,
-  Map<String, dynamic> request,
-  Map<String, dynamic> response,
-  Map<String, dynamic> recorded,
+  required MultiClientConfigCallback configure,
+  required Map<String, dynamic> request,
+  required Map<String, dynamic> response,
+  Map<String, dynamic>? recorded,
 });
 typedef MultiClientTestGroup = Function(MultiClientTest test);
 
 typedef _simpleHttpRequest = Future<http.Response> Function(
   Uri uri, {
-  Map<String, String> headers,
+  Map<String, String>? headers,
 });
 typedef _bodyHttpRequest = Future<http.Response> Function(
   Uri uri, {
-  Map<String, String> headers,
+  Map<String, String>? headers,
   dynamic body,
-  Encoding encoding,
+  Encoding? encoding,
 });
 
 typedef _simpleDioRequest = Future<dio.Response> Function(
   String path, {
-  Map<String, dynamic> queryParameters,
-  dio.Options options,
-  dio.CancelToken cancelToken,
-  dio.ProgressCallback onReceiveProgress,
+  Map<String, dynamic>? queryParameters,
+  dio.Options? options,
+  dio.CancelToken? cancelToken,
+  dio.ProgressCallback? onReceiveProgress,
 });
 typedef _simpleBodyDioRequest = Future<dio.Response> Function(
   String path, {
   dynamic data,
-  Map<String, dynamic> queryParameters,
-  dio.Options options,
-  dio.CancelToken cancelToken,
+  Map<String, dynamic>? queryParameters,
+  dio.Options? options,
+  dio.CancelToken? cancelToken,
 });
 
 typedef _bodyDioRequest = Future<dio.Response> Function(
   String path, {
   dynamic data,
-  Map<String, dynamic> queryParameters,
-  dio.Options options,
-  dio.CancelToken cancelToken,
-  dio.ProgressCallback onSendProgress,
-  dio.ProgressCallback onReceiveProgress,
+  Map<String, dynamic>? queryParameters,
+  dio.Options? options,
+  dio.CancelToken? cancelToken,
+  dio.ProgressCallback? onSendProgress,
+  dio.ProgressCallback? onReceiveProgress,
 });
 
 void multiClientTestGroup(String method, MultiClientTestGroup innerGroup) {
   innerGroup((
     String description, {
-    MultiClientConfigCallback configure,
-    Map<String, dynamic> request,
-    Map<String, dynamic> response,
-    Map<String, dynamic> recorded,
+    required MultiClientConfigCallback configure,
+    required Map<String, dynamic> request,
+    required Map<String, dynamic> response,
+    Map<String, dynamic>? recorded,
   }) {
     group(description, () {
-      TheInternet internet;
-      MockedServer server;
-      http.BaseClient httpClient;
-      dio.Dio dioClient;
-      String url;
+      late TheInternet internet;
+      late MockedServer server;
+      late http.BaseClient httpClient;
+      late dio.Dio dioClient;
+      late String url;
 
       Future<http.Response> executeSimpleHttpCall(_simpleHttpRequest call) {
         String urlWithQueryParams = url;
@@ -213,11 +213,11 @@ void multiClientTestGroup(String method, MultiClientTestGroup innerGroup) {
           if (recorded["request"] != null) {
             expect(recordedCall.request.uri,
                 Uri.parse(recorded["request"]["url"]));
-            expect(recordedCall.request.body?.asString,
+            expect(recordedCall.request.body.asString,
                 recorded["request"]["bodyAsString"]);
-            expect(recordedCall.request.body?.asFormData,
+            expect(recordedCall.request.body.asFormData,
                 recorded["request"]["bodyAsFormData"]);
-            expect(recordedCall.request.body?.asJson,
+            expect(recordedCall.request.body.asJson,
                 recorded["request"]["bodyAsJson"]);
 
             // only check extra headers (not content type or alike)
@@ -241,7 +241,7 @@ void multiClientTestGroup(String method, MultiClientTestGroup innerGroup) {
       });
 
       test("with http", () async {
-        http.Response resp;
+        http.Response? resp;
         if (method == "GET")
           resp = await executeSimpleHttpCall(httpClient.get);
         else if (method == "DELETE")
@@ -255,14 +255,14 @@ void multiClientTestGroup(String method, MultiClientTestGroup innerGroup) {
         else if (method == "PATCH")
           resp = await executeBodyHttpCall(httpClient.patch);
 
-        expect(resp.statusCode, response["code"]);
-        expect(resp.body, response["body"]);
-        expect(resp.headers, response["headers"]);
+        expect(resp?.statusCode, response["code"]);
+        expect(resp?.body, response["body"]);
+        expect(resp?.headers, response["headers"]);
 
         verifyRecordedCall();
       });
       test("with dio", () async {
-        dio.Response resp;
+        dio.Response? resp;
         try {
           if (method == "GET")
             resp = await executeSimpleDioCall(dioClient.get);
@@ -288,9 +288,9 @@ void multiClientTestGroup(String method, MultiClientTestGroup innerGroup) {
                   .entries
                   .map((e) => MapEntry(e.key.toLowerCase(), [e.value])));
 
-        expect(resp.statusCode, response["code"]);
-        expect(resp.data, response["body"]);
-        expect(resp.headers.map, response["headers"]);
+        expect(resp?.statusCode, response["code"]);
+        expect(resp?.data, response["body"]);
+        expect(resp?.headers.map, response["headers"]);
 
         verifyRecordedCall();
       });

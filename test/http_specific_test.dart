@@ -48,7 +48,7 @@ void main() {
       expect(
           recordedCall.request.uri, Uri.parse("https://example.com/messages"));
       expect(recordedCall.request.body.asString, "title=Hello");
-      expect(recordedCall.request.body.asFormData["title"], "Hello");
+      expect(recordedCall.request.body.asFormData?["title"], "Hello");
       expect(recordedCall.request.body.asJson, isNull);
 
       expect(

@@ -7,7 +7,7 @@ void main() {
     test("respond with input data and check recorded call",
         configure: (server) => server.put("/messages",
             bodyBuilder: (request) =>
-                {"newMessage": "message ${request.body.asFormData["title"]}"}),
+                {"newMessage": "message ${request.body.asFormData?["title"]}"}),
         request: {
           "path": "/messages",
           "formData": {"title": "Hello"}

@@ -2,7 +2,7 @@ import 'package:test/test.dart';
 import 'package:the_internet/the_internet.dart';
 
 void main() {
-  MockedServer server;
+  late MockedServer server;
 
   setUp(() {
     server = TheInternet().mockServer("foo");

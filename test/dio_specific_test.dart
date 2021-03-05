@@ -21,15 +21,15 @@ void main() {
       final Response<Map> response =
           await dio.get("https://example.com/messages");
 
-          expect(response.statusCode, 200);
-          expect(response.data, {
-            "page": 1,
-            "messages": ["Hello", "World"],
-          });
-          expect(response.headers.map, {
-            "content-type": ["application/json"]
-          });
-        });
+      expect(response.statusCode, 200);
+      expect(response.data, {
+        "page": 1,
+        "messages": ["Hello", "World"],
+      });
+      expect(response.headers.map, {
+        "content-type": ["application/json"]
+      });
+    });
 
     test("formdata header is added to request", (server, dio) async {
       server.post("/messages", code: 204);

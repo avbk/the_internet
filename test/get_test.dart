@@ -90,12 +90,10 @@ void main() {
 
     test(
       "allows to respond with json based on regex and headers",
-      configure: (server) =>
-          server.get("/messages/{name}",
-              bodyBuilder: (request) =>
-              {
+      configure: (server) => server.get("/messages/{name}",
+          bodyBuilder: (request) => {
                 "message":
-                "${request.headers["greeting"]} ${request.args["name"]}"
+                    "${request.headers["greeting"]} ${request.args["name"]}"
               }),
       request: {
         "path": "/messages/people",
@@ -113,10 +111,8 @@ void main() {
       configure: (server) {
         server.get(
           "/messages/{name}",
-          responseBuilder: (request) =>
-              MockedResponse(200,
-                  body: "${request.headers["greeting"]} ${request
-                      .args["name"]}"),
+          responseBuilder: (request) => MockedResponse(200,
+              body: "${request.headers["greeting"]} ${request.args["name"]}"),
         );
       },
       request: {
