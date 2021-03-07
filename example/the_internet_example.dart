@@ -26,14 +26,14 @@ void main() {
 
   test("create a message with http", () async {
     // Install a handler for POST /messages
-    server.post("/messages", code: 204);
+    server.post("/messages", code: 201);
 
     // create a new message via http client
     final uri = Uri.parse("https://demoapi.com/messages");
     final response = await httpClient.post(uri, body: {"title": "Hello"});
 
     // verify the mocked response
-    expect(response.statusCode, 204);
+    expect(response.statusCode, 201);
     expect(response.body, isEmpty);
 
     // verify the request captured by the handler
@@ -48,9 +48,8 @@ void main() {
   test("get messages with dio", () async {
     // Install a handler for GET /messages
     server.get("/messages", body: [
-      {"title": "Hello"},
-      {"title": "World"},
-      {"title": "test"},
+      {"id": 5, "msg": "Hello"},
+      {"id": 19, "msg": "World"},
     ]);
 
     // get messages via dio client
@@ -60,9 +59,8 @@ void main() {
     // verify the mocked response
     expect(response.statusCode, 200);
     expect(response.data, [
-      {"title": "Hello"},
-      {"title": "World"},
-      {"title": "test"},
+      {"id": 5, "msg": "Hello"},
+      {"id": 19, "msg": "World"},
     ]);
 
     // verify the request captured by the handler
