@@ -139,7 +139,7 @@ class _MockDioAdapter extends dio.HttpClientAdapter {
 
   @override
   Future<dio.ResponseBody> fetch(dio.RequestOptions options,
-      Stream<List<int>> requestStream, Future? cancelFuture) {
+      Stream<Uint8List>? requestStream, Future? cancelFuture) {
     return _internet._handleDioRequest(options);
   }
 
